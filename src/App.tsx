@@ -26,7 +26,7 @@ export function App() {
   );
 
   return (
-    <div className="bg-background text-foreground min-h-screen">
+    <div className="bg-background text-foreground flex h-screen flex-col">
       <header className="flex items-center gap-4 border-b px-6 py-4">
         <img
           src={logo}
@@ -34,25 +34,25 @@ export function App() {
           className="h-10 w-auto"
         />
       </header>
-      <main className="space-y-4 p-6">
-        {error && <p className="text-destructive">{error}</p>}
-        {!data && !error && (
-          <p className="text-muted-foreground">Loading…</p>
-        )}
-        {data && facets && filtered && (
-          <>
+      {error && <p className="text-destructive p-6">{error}</p>}
+      {!data && !error && (
+        <p className="text-muted-foreground p-6">Loading…</p>
+      )}
+      {data && facets && filtered && (
+        <>
+          <div className="space-y-3 px-6 pt-4 pb-3">
             <FilterBar
               filters={filters}
               facets={facets}
               onChange={setFilters}
             />
             <p className="text-sm">
-              {filtered.length.toLocaleString()} taxa
+              Showing {filtered.length.toLocaleString()} taxa
             </p>
-            <SpeciesTable data={filtered} />
-          </>
-        )}
-      </main>
+          </div>
+          <SpeciesTable data={filtered} />
+        </>
+      )}
     </div>
   );
 }

@@ -93,8 +93,7 @@ export function SpeciesTable({ data }: { data: Species[] }) {
   return (
     <div
       ref={scrollRef}
-      className="relative overflow-auto rounded-md border"
-      style={{ height: "calc(100vh - 12rem)" }}
+      className="relative flex-1 overflow-auto border-t"
     >
       <div
         className="bg-muted text-muted-foreground sticky top-0 z-10 grid border-b text-xs font-medium"
