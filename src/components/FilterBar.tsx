@@ -32,7 +32,7 @@ export function FilterBar({ filters, facets, onChange }: Props) {
       <div className="relative">
         <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 opacity-50" />
         <Input
-          placeholder="Search..."
+          placeholder="Search species..."
           value={filters.search}
           onChange={(e) => update("search", e.target.value)}
           className="h-9 w-64 pl-8"

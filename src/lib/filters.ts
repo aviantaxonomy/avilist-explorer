@@ -25,9 +25,6 @@ const SEARCH_FIELDS = [
   "English_name_AviList",
   "English_name_Clements_v2024",
   "English_name_BirdLife_v9",
-  "Family",
-  "Family_English_name",
-  "Protonym",
 ] as const;
 
 export type FilterState = {

@@ -118,20 +118,23 @@ export function MultiSelectFilter({
                 })}
               </CommandGroup>
             )}
-            {selected.size > 0 && (
-              <>
-                <CommandSeparator />
-                <CommandGroup>
-                  <CommandItem
-                    onSelect={() => onChange(new Set())}
-                    className="justify-center text-center"
-                  >
-                    Clear ({selected.size})
-                  </CommandItem>
-                </CommandGroup>
-              </>
-            )}
           </CommandList>
+          {selected.size > 0 && (
+            <>
+              <CommandSeparator />
+              <CommandGroup>
+                <CommandItem
+                  onSelect={() => {
+                    onChange(new Set());
+                    setOpen(false);
+                  }}
+                  className="justify-center text-center"
+                >
+                  Clear ({selected.size})
+                </CommandItem>
+              </CommandGroup>
+            </>
+          )}
         </Command>
       </PopoverContent>
     </Popover>
