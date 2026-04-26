@@ -46,6 +46,7 @@ export function SpeciesTable({ data }: { data: Species[] }) {
   const gridTemplate = headers
     .map((h) => `${h.column.getSize()}px`)
     .join(" ");
+  const totalWidth = headers.reduce((sum, h) => sum + h.column.getSize(), 0);
 
   return (
     <div
@@ -55,7 +56,11 @@ export function SpeciesTable({ data }: { data: Species[] }) {
     >
       <div
         className="bg-muted text-muted-foreground sticky top-0 z-10 grid border-b text-xs font-medium"
-        style={{ gridTemplateColumns: gridTemplate, height: ROW_HEIGHT }}
+        style={{
+          gridTemplateColumns: gridTemplate,
+          height: ROW_HEIGHT,
+          minWidth: totalWidth,
+        }}
       >
         {headers.map((header) => (
           <div key={header.id} className="flex items-center truncate px-3">
@@ -64,7 +69,11 @@ export function SpeciesTable({ data }: { data: Species[] }) {
         ))}
       </div>
       <div
-        style={{ height: virtualizer.getTotalSize(), position: "relative" }}
+        style={{
+          height: virtualizer.getTotalSize(),
+          position: "relative",
+          minWidth: totalWidth,
+        }}
       >
         {virtualizer.getVirtualItems().map((vRow) => {
           const row = rows[vRow.index];
