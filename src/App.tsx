@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { SpeciesTable } from "@/components/SpeciesTable";
 import { loadSpecies, type Species } from "@/lib/data";
+import logo from "@/assets/logo.webp";
 
 export function App() {
   const [data, setData] = useState<Species[] | null>(null);
@@ -12,12 +13,16 @@ export function App() {
 
   return (
     <div className="bg-background text-foreground min-h-screen">
-      <header className="border-b px-6 py-4">
-        <h1 className="text-xl font-semibold">AviList Explorer</h1>
+      <header className="flex items-center gap-4 border-b px-6 py-4">
+        <img
+          src={logo}
+          alt="AviList — The Global Avian Checklist"
+          className="h-10 w-auto"
+        />
         {data && (
-          <p className="text-muted-foreground mt-1 text-sm">
+          <span className="text-muted-foreground border-l pl-4 text-sm">
             {data.length.toLocaleString()} taxa
-          </p>
+          </span>
         )}
       </header>
       <main className="p-6">
