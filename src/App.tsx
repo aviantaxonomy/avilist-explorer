@@ -184,8 +184,12 @@ export function App() {
         </>
       )}
 
-      {selected && (
-        <DetailPanel taxon={selected} onClose={() => setSelected(null)} />
+      {selected && currentVersion && (
+        <DetailPanel
+          taxon={selected}
+          version={currentVersion}
+          onClose={() => setSelected(null)}
+        />
       )}
     </div>
   );

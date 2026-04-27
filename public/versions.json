@@ -1,11 +1,41 @@
 {
+  "columnMap": {
+    "Sequence": ["Sequence"],
+    "Taxon_rank": ["Taxon_rank"],
+    "Order": ["Order"],
+    "Family": ["Family"],
+    "Family_English_name": ["Family_English_name"],
+    "Scientific_name": ["Scientific_name"],
+    "Authority": ["Authority"],
+    "Bibliographic_details": ["Bibliographic_details"],
+    "English_name_AviList": ["English_name_AviList"],
+    "English_name_Clements_v2024": ["English_name_Clements_v2024"],
+    "English_name_BirdLife_v9": ["English_name_BirdLife_v9"],
+    "Proposal_number": ["Proposal_number"],
+    "Decision_summary": ["Decision_summary"],
+    "Range": ["Range"],
+    "Extinct_or_possibly_extinct": ["Extinct_or_possibly_extinct"],
+    "IUCN_Red_List_Category": ["IUCN_Red_List_Category"],
+    "BirdLife_DataZone_URL": ["BirdLife_DataZone_URL"],
+    "Species_code_Cornell_Lab": ["Species_code_Cornell_Lab"],
+    "Birds_of_the_World_URL": ["Birds_of_the_World_URL"],
+    "AvibaseID": ["AvibaseID"],
+    "Gender_of_genus": ["Gender_of_genus"],
+    "Type_species_of_genus": ["Type_species_of_genus"],
+    "Type_locality": ["Type_locality"],
+    "Title_of_original_description": ["Title_of_original_description"],
+    "Original_description_URL": ["Original_description_URL"],
+    "Protonym": ["Protonym"]
+  },
   "versions": [
     {
       "id": "2025.06",
       "label": "v2025.06",
       "released": "11 Jun 2025",
       "inputXlsx": "AviList-v2025-11Jun-extended.xlsx",
-      "sheet": "AviList v2025 extended"
+      "sheet": "AviList v2025 extended",
+      "clementsVersion": "v2024",
+      "birdLifeVersion": "v9"
     }
   ]
 }

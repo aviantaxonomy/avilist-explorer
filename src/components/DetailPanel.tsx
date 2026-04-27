@@ -2,9 +2,11 @@ import { useEffect } from "react";
 import { ExternalLink } from "lucide-react";
 import type { Species } from "@/lib/data";
 import { IUCN_BAR_ORDER, IUCN_INFO, type IucnCode } from "@/lib/iucn";
+import type { Version } from "@/lib/versions";
 
 type Props = {
   taxon: Species;
+  version: Version;
   onClose: () => void;
 };
 
@@ -38,7 +40,7 @@ const SECTION_LABEL =
 const META_LABEL =
   "text-ink-3 text-[11px] font-semibold uppercase tracking-wider";
 
-export function DetailPanel({ taxon, onClose }: Props) {
+export function DetailPanel({ taxon, version, onClose }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -62,7 +64,7 @@ export function DetailPanel({ taxon, onClose }: Props) {
     taxon.English_name_Clements_v2024 !== taxon.English_name_AviList
   ) {
     altNames.push({
-      source: "Clements 2024",
+      source: `Clements ${version.clementsVersion}`,
       name: taxon.English_name_Clements_v2024,
     });
   }
@@ -71,7 +73,7 @@ export function DetailPanel({ taxon, onClose }: Props) {
     taxon.English_name_BirdLife_v9 !== taxon.English_name_AviList
   ) {
     altNames.push({
-      source: "BirdLife v9",
+      source: `BirdLife ${version.birdLifeVersion}`,
       name: taxon.English_name_BirdLife_v9,
     });
   }

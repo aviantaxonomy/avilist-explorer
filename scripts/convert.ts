@@ -2,9 +2,9 @@ import ExcelJS from "exceljs";
 import { writeFile, mkdir, stat, readFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { gzipSync, constants as zlibConstants } from "node:zlib";
+import { COLUMNS } from "../src/columns.ts";
 
 const VERSIONS_FILE = "public/versions.json";
-const OUT_COLUMNS = "src/columns.ts";
 
 type Version = {
   id: string;
@@ -15,10 +15,9 @@ type Version = {
 };
 
 type Manifest = {
+  columnMap?: Record<string, string[]>;
   versions: Version[];
 };
-
-type Row = Record<string, string>;
 
 function escapeHtml(s: string): string {
   return s
@@ -71,7 +70,11 @@ function cellValue(cell: ExcelJS.Cell): string | null {
   return cell.text;
 }
 
-async function processVersion(version: Version): Promise<string[]> {
+async function processVersion(
+  version: Version,
+  canonical: string[],
+  columnMap: Record<string, string[]>,
+): Promise<void> {
   console.log(`\n=== ${version.id} ===`);
   console.log(`Reading ${version.inputXlsx}…`);
 
@@ -85,42 +88,65 @@ async function processVersion(version: Version): Promise<string[]> {
     );
   }
 
-  const headers: string[] = [];
+  // Build xlsx-name → column-index from header row
+  const xlsxIndex = new Map<string, number>();
   sheet.getRow(1).eachCell({ includeEmpty: false }, (cell, col) => {
-    headers[col] = cell.text;
+    const name = cell.text;
+    if (name && !xlsxIndex.has(name)) xlsxIndex.set(name, col);
   });
 
-  const rows: Row[] = [];
+  // Resolve each canonical field to its xlsx column index (or null if missing).
+  // For each field: try the columnMap aliases in order; fall back to the
+  // canonical name itself.
+  const resolved: { canonical: string; xlsxCol: number | null }[] = [];
+  const missing: string[] = [];
+  for (const field of canonical) {
+    const candidates = columnMap[field] ?? [field];
+    let col: number | null = null;
+    for (const name of candidates) {
+      const idx = xlsxIndex.get(name);
+      if (idx != null) {
+        col = idx;
+        break;
+      }
+    }
+    resolved.push({ canonical: field, xlsxCol: col });
+    if (col == null) missing.push(field);
+  }
+  if (missing.length > 0) {
+    console.warn(
+      `  ⚠️  ${missing.length} canonical field(s) not found in xlsx — will be null in output: ${missing.join(", ")}`,
+    );
+  }
+
+  // Walk data rows; produce arrays in canonical order.
+  const compact: (string | null)[][] = [];
   let cellCount = 0;
   let richCount = 0;
 
   for (let r = 2; r <= sheet.rowCount; r++) {
-    const row = sheet.getRow(r);
-    const obj: Row = {};
+    const xlsxRow = sheet.getRow(r);
+    const out: (string | null)[] = new Array(canonical.length).fill(null);
     let hasAny = false;
-    row.eachCell({ includeEmpty: false }, (cell, col) => {
-      const key = headers[col];
-      if (!key) return;
+    for (let i = 0; i < resolved.length; i++) {
+      const { xlsxCol } = resolved[i];
+      if (xlsxCol == null) continue;
+      const cell = xlsxRow.getCell(xlsxCol);
       const val = cellValue(cell);
-      if (val == null) return;
-      obj[key] = val;
+      if (val == null) continue;
+      out[i] = val;
       hasAny = true;
       cellCount++;
       if (/<(em|strong|u|s)>/.test(val)) richCount++;
-    });
-    if (hasAny) rows.push(obj);
+    }
+    if (hasAny) compact.push(out);
   }
 
   console.log(
-    `  ${rows.length} rows · ${cellCount} cells · ${richCount} HTML cells`,
+    `  ${compact.length} rows · ${cellCount} cells · ${richCount} HTML cells`,
   );
 
-  const columnList = headers.filter(Boolean);
-  const compact: (string | null)[][] = rows.map((row) =>
-    columnList.map((col) => (col in row ? row[col] : null)),
-  );
   const compactJson = JSON.stringify(compact);
-
   const outPath = `public/data/avilist-${version.id}.json.gz`;
   await mkdir(dirname(outPath), { recursive: true });
   await writeFile(
@@ -130,41 +156,17 @@ async function processVersion(version: Version): Promise<string[]> {
 
   const { size } = await stat(outPath);
   console.log(`  Wrote ${outPath} (${(size / 1024 / 1024).toFixed(2)} MB)`);
-
-  return columnList;
 }
 
 async function main() {
   const manifest: Manifest = JSON.parse(await readFile(VERSIONS_FILE, "utf8"));
-  console.log(`Found ${manifest.versions.length} version(s) in ${VERSIONS_FILE}`);
+  console.log(
+    `${COLUMNS.length} canonical columns · ${manifest.versions.length} version(s)`,
+  );
 
-  let canonicalColumns: string[] | null = null;
-
+  const columnMap = manifest.columnMap ?? {};
   for (const version of manifest.versions) {
-    const columns = await processVersion(version);
-    if (!canonicalColumns) {
-      canonicalColumns = columns;
-    } else if (
-      columns.length !== canonicalColumns.length ||
-      columns.some((c, i) => c !== canonicalColumns![i])
-    ) {
-      console.warn(
-        `  ⚠️  Columns in ${version.id} differ from the first version's columns. ` +
-          `src/columns.ts is generated from the first version only.`,
-      );
-    }
-  }
-
-  if (canonicalColumns) {
-    const columnsTs = `// Generated by scripts/convert.ts — do not edit by hand.
-// Index positions are the source of truth for unpacking avilist-<version-id>.json.gz.
-
-export const COLUMNS = ${JSON.stringify(canonicalColumns, null, 2)} as const;
-
-export type Column = (typeof COLUMNS)[number];
-`;
-    await writeFile(OUT_COLUMNS, columnsTs);
-    console.log(`\nWrote ${OUT_COLUMNS}`);
+    await processVersion(version, [...COLUMNS], columnMap);
   }
 }
 

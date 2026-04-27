@@ -29,14 +29,16 @@ export function FilterBar({ filters, facets, onChange, resultsLabel }: Props) {
     setSearchValue(filters.search);
   }, [filters.search]);
 
-  // Debounce local input → parent filter state
+  // Debounce local input → parent filter state.
+  // `filters` is a dep so a mid-debounce facet change (Rank/Order/Family/IUCN)
+  // re-schedules the timer with the latest filters and isn't dropped.
   useEffect(() => {
     if (searchValue === filters.search) return;
     const t = setTimeout(() => {
       onChange({ ...filters, search: searchValue });
     }, SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(t);
-  }, [searchValue]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [searchValue, filters, onChange]);
 
   const update = <K extends keyof FilterState>(
     key: K,
