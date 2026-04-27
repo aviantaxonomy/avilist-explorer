@@ -1,7 +1,4 @@
 import { useState, type ReactNode } from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Command,
   CommandEmpty,
@@ -16,6 +13,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { SelectIndicator } from "./SelectIndicator";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -24,6 +22,7 @@ type Props = {
   selected: Set<string>;
   onChange: (next: Set<string>) => void;
   formatLabel?: (value: string) => ReactNode;
+  formatTriggerValue?: (value: string) => string;
   getKeywords?: (value: string) => string[];
   popoverWidth?: string;
 };
@@ -34,6 +33,7 @@ export function MultiSelectFilter({
   selected,
   onChange,
   formatLabel = (v) => v,
+  formatTriggerValue = (v) => v,
   getKeywords,
   popoverWidth = "w-72",
 }: Props) {
@@ -65,22 +65,30 @@ export function MultiSelectFilter({
       }}
     >
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-9 justify-between gap-2"
+        <button
+          type="button"
+          className={cn("mu-chip", selected.size > 0 && "is-active")}
         >
-          <span className="font-medium">{label}</span>
+          <span className="mu-chip-label">{label}</span>
           {selected.size > 0 && (
-            <Badge
-              variant="secondary"
-              className="rounded-sm px-1.5 font-normal"
-            >
-              {selected.size}
-            </Badge>
+            <>
+              <span className="mu-chip-sep">·</span>
+              <span className="mu-chip-value">
+                {selected.size === 1
+                  ? formatTriggerValue([...selected][0])
+                  : `${selected.size} selected`}
+              </span>
+            </>
           )}
-          <ChevronsUpDown className="size-4 opacity-50" />
-        </Button>
+          <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+            <path
+              d="M2 4l3 3 3-3"
+              stroke="currentColor"
+              fill="none"
+              strokeWidth="1.5"
+            />
+          </svg>
+        </button>
       </PopoverTrigger>
       <PopoverContent className={cn(popoverWidth, "p-0")} align="start">
         <Command shouldFilter={false}>
@@ -102,16 +110,7 @@ export function MultiSelectFilter({
                       value={opt}
                       onSelect={() => toggle(opt)}
                     >
-                      <div
-                        className={cn(
-                          "border-primary mr-2 flex size-4 shrink-0 items-center justify-center rounded-sm border",
-                          isSelected
-                            ? "bg-primary text-primary-foreground"
-                            : "opacity-60",
-                        )}
-                      >
-                        {isSelected && <Check className="size-3" />}
-                      </div>
+                      <SelectIndicator active={isSelected} />
                       <span className="truncate">{formatLabel(opt)}</span>
                     </CommandItem>
                   );

@@ -4,15 +4,18 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
+  type CellContext,
   type ColumnDef,
   type Row,
   type SortingState,
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { ChevronDown, ChevronsUpDown, ChevronUp } from "lucide-react";
 import type { Species } from "@/lib/data";
+import { IUCN_INFO, type IucnCode } from "@/lib/iucn";
 
-const ROW_HEIGHT = 40;
+const ROW_HEIGHT = 48;
+
+const RANK_KEYS = new Set(["order", "family", "genus", "species", "subspecies"]);
 
 const IUCN_SEVERITY: Record<string, number> = {
   LC: 1,
@@ -32,38 +35,95 @@ const iucnSort = (a: Row<Species>, b: Row<Species>, id: string) => {
   return av - bv;
 };
 
+function RankBadge({ rank }: { rank?: string }) {
+  if (!rank || !RANK_KEYS.has(rank)) return <span className="mu-empty">—</span>;
+  return (
+    <span className={`mu-rank-badge mu-rank-badge-${rank}`}>{rank}</span>
+  );
+}
+
+function ScientificCell({ value }: { value?: string }) {
+  if (!value) return <span className="mu-empty">—</span>;
+  return <span className="mu-sci">{value}</span>;
+}
+
+function IucnPill({ code }: { code?: string }) {
+  if (!code) return <span className="mu-empty">—</span>;
+  const info = IUCN_INFO[code as IucnCode];
+  if (!info) return <span>{code}</span>;
+  return (
+    <span
+      className="mu-iucn"
+      style={{ background: info.bg, color: info.fg }}
+      title={info.label}
+    >
+      {code}
+    </span>
+  );
+}
+
+const renderText = (info: CellContext<Species, unknown>) => {
+  const v = info.getValue() as string | undefined;
+  return v ?? <span className="mu-empty">—</span>;
+};
+
 const columns: ColumnDef<Species>[] = [
   {
-    accessorKey: "Sequence",
+    id: "index",
     header: "#",
-    size: 64,
-    sortingFn: "alphanumeric",
+    size: 56,
+    enableSorting: false,
+    cell: (ctx) => <span className="mu-num">{ctx.row.index + 1}</span>,
   },
-  { accessorKey: "Taxon_rank", header: "Rank", size: 96, enableSorting: false },
-  { accessorKey: "Order", header: "Order", size: 168 },
-  { accessorKey: "Family", header: "Family", size: 168 },
+  {
+    accessorKey: "Taxon_rank",
+    header: "Rank",
+    size: 120,
+    enableSorting: false,
+    cell: (ctx) => <RankBadge rank={ctx.getValue() as string | undefined} />,
+  },
+  { accessorKey: "Order", header: "Order", size: 170, cell: renderText },
+  { accessorKey: "Family", header: "Family", size: 160, cell: renderText },
   {
     accessorKey: "Family_English_name",
     header: "Family (English)",
     size: 200,
     enableSorting: false,
+    cell: renderText,
   },
   {
     accessorKey: "Scientific_name",
     header: "Scientific name",
-    size: 240,
-    meta: { italic: true },
+    size: 280,
+    cell: (ctx) => (
+      <ScientificCell value={ctx.getValue() as string | undefined} />
+    ),
   },
-  { accessorKey: "English_name_AviList", header: "English name", size: 220 },
+  {
+    accessorKey: "English_name_AviList",
+    header: "English name",
+    size: 200,
+    cell: (ctx) => {
+      const v = ctx.getValue() as string | undefined;
+      return v ? <span className="mu-en">{v}</span> : <span className="mu-empty">—</span>;
+    },
+  },
   {
     accessorKey: "IUCN_Red_List_Category",
     header: "IUCN",
-    size: 80,
+    size: 120,
     sortingFn: iucnSort,
+    cell: (ctx) => <IucnPill code={ctx.getValue() as string | undefined} />,
   },
 ];
 
-export function SpeciesTable({ data }: { data: Species[] }) {
+type Props = {
+  data: Species[];
+  selected: Species | null;
+  onSelect: (s: Species) => void;
+};
+
+export function SpeciesTable({ data, selected, onSelect }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -91,17 +151,10 @@ export function SpeciesTable({ data }: { data: Species[] }) {
   const totalWidth = headers.reduce((sum, h) => sum + h.column.getSize(), 0);
 
   return (
-    <div
-      ref={scrollRef}
-      className="relative flex-1 overflow-auto border-t"
-    >
+    <div ref={scrollRef} className="mu-table-wrap">
       <div
-        className="bg-muted text-muted-foreground sticky top-0 z-10 grid border-b text-xs font-medium"
-        style={{
-          gridTemplateColumns: gridTemplate,
-          height: ROW_HEIGHT,
-          minWidth: totalWidth,
-        }}
+        className="mu-table-head"
+        style={{ gridTemplateColumns: gridTemplate, minWidth: totalWidth }}
       >
         {headers.map((header) => {
           const canSort = header.column.getCanSort();
@@ -109,63 +162,74 @@ export function SpeciesTable({ data }: { data: Species[] }) {
           return (
             <div
               key={header.id}
-              className={`flex items-center gap-1 truncate px-3 ${canSort ? "hover:text-foreground cursor-pointer select-none" : ""}`}
+              className={`mu-th ${canSort ? "is-sortable" : ""} ${sorted ? "is-active" : ""}`}
               onClick={
                 canSort ? header.column.getToggleSortingHandler() : undefined
               }
             >
-              <span className="truncate">
+              <span className="mu-cell-truncate">
                 {flexRender(
                   header.column.columnDef.header,
                   header.getContext(),
                 )}
               </span>
-              {canSort &&
-                (sorted === "asc" ? (
-                  <ChevronUp className="size-3.5 shrink-0" />
-                ) : sorted === "desc" ? (
-                  <ChevronDown className="size-3.5 shrink-0" />
-                ) : (
-                  <ChevronsUpDown className="size-3.5 shrink-0 opacity-40" />
-                ))}
+              {canSort && (
+                <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+                  {sorted === "asc" ? (
+                    <path
+                      d="M2 6l3-3 3 3"
+                      stroke="currentColor"
+                      fill="none"
+                      strokeWidth="1.4"
+                    />
+                  ) : sorted === "desc" ? (
+                    <path
+                      d="M2 4l3 3 3-3"
+                      stroke="currentColor"
+                      fill="none"
+                      strokeWidth="1.4"
+                    />
+                  ) : (
+                    <path
+                      d="M2 4l3-3 3 3M2 6l3 3 3-3"
+                      stroke="currentColor"
+                      fill="none"
+                      strokeWidth="1.4"
+                    />
+                  )}
+                </svg>
+              )}
             </div>
           );
         })}
       </div>
       <div
+        className="mu-rows"
         style={{
           height: virtualizer.getTotalSize(),
-          position: "relative",
           minWidth: totalWidth,
         }}
       >
         {virtualizer.getVirtualItems().map((vRow) => {
           const row = rows[vRow.index];
+          const isSelected =
+            selected != null && selected.Sequence === row.original.Sequence;
           return (
             <div
               key={row.id}
-              className="hover:bg-muted/40 absolute inset-x-0 grid border-b text-sm"
+              className={`mu-row ${isSelected ? "is-selected" : ""}`}
               style={{
-                transform: `translateY(${vRow.start}px)`,
                 gridTemplateColumns: gridTemplate,
+                transform: `translateY(${vRow.start}px)`,
                 height: ROW_HEIGHT,
               }}
+              onClick={() => onSelect(row.original)}
             >
-              {row.getVisibleCells().map((cell) => {
-                const value = cell.getValue() as string | undefined;
-                const italic = (
-                  cell.column.columnDef.meta as { italic?: boolean } | undefined
-                )?.italic;
-                return (
-                  <div
-                    key={cell.id}
-                    className={`flex items-center truncate px-3 ${italic ? "italic" : ""}`}
-                    title={value ?? ""}
-                  >
-                    {value ?? ""}
-                  </div>
-                );
-              })}
+              {row.getVisibleCells().map((cell) => (
+                <div key={cell.id} className="mu-cell mu-cell-truncate">
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </div>
+              ))}
             </div>
           );
         })}
