@@ -10,6 +10,7 @@ import {
   type SortingState,
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { FileText } from "lucide-react";
 import type { Species } from "@/lib/data";
 import { IUCN_INFO, type IucnCode } from "@/lib/iucn";
 
@@ -144,14 +145,15 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
           return (
             <button
               type="button"
-              className="text-ink-3 hover:text-ink cursor-pointer text-[12px] font-medium underline underline-offset-2"
+              className="text-ink-3 hover:text-ink inline-flex cursor-pointer items-center gap-1 text-[12px] font-medium"
               title="View decision summary"
               onClick={(e) => {
                 e.stopPropagation();
                 onSelect(ctx.row.original, "decision-summary");
               }}
             >
-              View
+              <FileText className="size-3" />
+              <span className="underline underline-offset-2">View</span>
             </button>
           );
         },
