@@ -20,7 +20,7 @@ type Lineage = { rank: string; name: string };
 const RANK_ORDER = ["order", "family", "genus", "species", "subspecies"];
 
 const isItalicRank = (rank?: string) =>
-  rank === "species" || rank === "subspecies";
+  rank === "genus" || rank === "species" || rank === "subspecies";
 
 function buildLineage(t: Species): Lineage[] {
   const rank = t.rank ?? "";

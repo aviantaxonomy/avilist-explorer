@@ -49,7 +49,8 @@ function RankBadge({ rank }: { rank?: string }) {
 
 function ScientificCell({ value, rank }: { value?: string; rank?: string }) {
   if (!value) return null;
-  const italic = rank === "species" || rank === "subspecies";
+  const italic =
+    rank === "genus" || rank === "species" || rank === "subspecies";
   return (
     <span className={`font-fraunces text-sm ${italic ? "italic" : ""}`}>
       {value}
