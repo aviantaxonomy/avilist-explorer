@@ -132,10 +132,7 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
         accessorKey: "name",
         header: "English name",
         size: 200,
-        cell: (ctx) => {
-          const v = ctx.getValue() as string | undefined;
-          return v ? <span className="text-ink-2">{v}</span> : null;
-        },
+        cell: renderText,
       },
       {
         accessorKey: "proposalNumber",
@@ -148,7 +145,7 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
           return (
             <button
               type="button"
-              className="text-ink-3 hover:bg-warm hover:text-ink inline-flex cursor-pointer items-center gap-1 rounded px-2 py-1"
+              className="hover:bg-warm hover:text-ink inline-flex cursor-pointer items-center gap-1 rounded px-2 py-1 text-[#676760]"
               title="View decision summary"
               onClick={(e) => {
                 e.stopPropagation();
@@ -283,6 +280,7 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
       >
         {virtualizer.getVirtualItems().map((vRow) => {
           const row = rows[vRow.index];
+          const rowRank = row.original.rank;
           const isSelected =
             selected != null && selected.sequence === row.original.sequence;
           return (
@@ -290,6 +288,8 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
               key={row.id}
               className={[
                 "border-rule absolute inset-x-0 grid cursor-pointer border-b text-[13px] transition-colors hover:bg-[rgba(0,0,0,0.025)]",
+                rowRank === "species" ? "bg-warm/60" : "",
+                rowRank === "subspecies" ? "opacity-60" : "",
                 isSelected
                   ? "bg-selected [&>:first-child]:shadow-[inset_3px_0_0_var(--color-accent-2)]"
                   : "",
