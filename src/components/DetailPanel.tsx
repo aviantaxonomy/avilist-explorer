@@ -19,6 +19,9 @@ type Lineage = { rank: string; name: string };
 
 const RANK_ORDER = ["order", "family", "genus", "species", "subspecies"];
 
+const isItalicRank = (rank?: string) =>
+  rank === "species" || rank === "subspecies";
+
 function buildLineage(t: Species): Lineage[] {
   const rank = t.rank ?? "";
   const idx = RANK_ORDER.indexOf(rank);
@@ -134,12 +137,16 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
             <h2 className="mt-3.5 mb-1.5 text-[32px] font-medium leading-[1.1] tracking-[-0.01em]">
               {english}
             </h2>
-            <div className="font-fraunces text-ink-2 mb-7 text-lg italic">
+            <div
+              className={`font-fraunces text-ink-2 mb-7 text-lg ${isItalicRank(rank) ? "italic" : ""}`}
+            >
               {taxon.sciName}
             </div>
           </>
         ) : (
-          <h2 className="font-fraunces mt-3.5 mb-7 text-[36px] italic leading-[1.1] tracking-[-0.01em]">
+          <h2
+            className={`font-fraunces mt-3.5 mb-7 text-[36px] leading-[1.1] tracking-[-0.01em] ${isItalicRank(rank) ? "italic" : ""}`}
+          >
             {taxon.sciName}
           </h2>
         )}
@@ -157,7 +164,11 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
                   <span className="text-ink-3 w-[70px] flex-shrink-0 text-[10px] font-semibold uppercase tracking-wider">
                     {a.rank}
                   </span>
-                  <span className="font-fraunces text-sm italic">{a.name}</span>
+                  <span
+                    className={`font-fraunces text-sm ${isItalicRank(a.rank) ? "italic" : ""}`}
+                  >
+                    {a.name}
+                  </span>
                 </li>
               ))}
               <li
@@ -167,7 +178,9 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
                 <span className="text-ink-3 w-[70px] flex-shrink-0 text-[10px] font-semibold uppercase tracking-wider">
                   {rank}
                 </span>
-                <span className="font-fraunces text-accent-2 text-sm font-semibold italic">
+                <span
+                  className={`font-fraunces text-accent-2 text-sm font-semibold ${isItalicRank(rank) ? "italic" : ""}`}
+                >
                   {taxon.sciName}
                 </span>
               </li>
@@ -284,7 +297,9 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
               {(taxon.protonym || taxon.authority) && (
                 <div className="mb-4">
                   {taxon.protonym && (
-                    <div className="font-fraunces text-ink text-lg italic leading-tight">
+                    <div
+                      className={`font-fraunces text-ink text-lg leading-tight ${isItalicRank(rank) ? "italic" : ""}`}
+                    >
                       {taxon.protonym}
                     </div>
                   )}

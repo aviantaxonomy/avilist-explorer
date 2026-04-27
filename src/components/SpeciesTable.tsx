@@ -48,9 +48,14 @@ function RankBadge({ rank }: { rank?: string }) {
   );
 }
 
-function ScientificCell({ value }: { value?: string }) {
+function ScientificCell({ value, rank }: { value?: string; rank?: string }) {
   if (!value) return <span className="text-ink-3">—</span>;
-  return <span className="font-fraunces text-sm italic">{value}</span>;
+  const italic = rank === "species" || rank === "subspecies";
+  return (
+    <span className={`font-fraunces text-sm ${italic ? "italic" : ""}`}>
+      {value}
+    </span>
+  );
 }
 
 function IucnPill({ code }: { code?: string }) {
@@ -119,7 +124,10 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
         header: "Scientific name",
         size: 360,
         cell: (ctx) => (
-          <ScientificCell value={ctx.getValue() as string | undefined} />
+          <ScientificCell
+            value={ctx.getValue() as string | undefined}
+            rank={ctx.row.original.rank}
+          />
         ),
       },
       {
