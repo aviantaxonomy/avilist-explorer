@@ -83,7 +83,10 @@ export function MultiSelectFilter({
           </svg>
         </button>
       </PopoverTrigger>
-      <PopoverContent className={cn(popoverWidth, "p-0")} align="start">
+      <PopoverContent
+        className={cn(popoverWidth, "max-w-[calc(100vw-2rem)] p-0")}
+        align="start"
+      >
         <Command shouldFilter={false}>
           <CommandInput
             placeholder={`Search ${label.toLowerCase()}…`}

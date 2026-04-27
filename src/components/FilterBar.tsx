@@ -46,8 +46,8 @@ export function FilterBar({ filters, facets, onChange, resultsLabel }: Props) {
   };
 
   return (
-    <div className="bg-surface border-rule flex flex-wrap items-center gap-4 border-b px-8 py-[18px]">
-      <label className="border-rule bg-bg text-ink-3 hover:border-ink-3 focus-within:border-ink-3 flex h-10 min-w-[320px] flex-1 items-center gap-2.5 rounded-full border px-3.5 transition-colors max-w-[520px]">
+    <div className="bg-surface border-rule flex flex-wrap items-center gap-4 border-b px-4 py-[18px] sm:px-8">
+      <label className="border-rule bg-bg text-ink-3 hover:border-ink-3 focus-within:border-ink-3 flex h-10 min-w-0 flex-1 items-center gap-2.5 rounded-full border px-3.5 transition-colors max-w-[520px] sm:min-w-[320px]">
         <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
           <circle
             cx="11"
@@ -138,7 +138,7 @@ export function FilterBar({ filters, facets, onChange, resultsLabel }: Props) {
         )}
       </div>
 
-      <div className="text-ink-3 ml-auto text-xs [&_b]:text-ink [&_b]:font-semibold">
+      <div className="text-ink-3 text-xs sm:ml-auto [&_b]:text-ink [&_b]:font-semibold">
         {resultsLabel}
       </div>
     </div>

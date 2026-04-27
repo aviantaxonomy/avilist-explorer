@@ -87,27 +87,27 @@ export function App() {
 
   return (
     <div className="bg-bg text-ink font-sans flex h-screen flex-col overflow-hidden">
-      <header className="bg-surface border-rule grid grid-cols-[auto_1fr] items-center gap-8 border-b px-8 py-[18px]">
-        <div className="flex items-center gap-6">
-          <a
-            href="https://avilist.org/"
-            aria-label="AviList — The Global Avian Checklist"
-          >
-            <img
-              src={logo}
-              alt="AviList — The Global Avian Checklist"
-              className="block h-9 w-auto"
-            />
-          </a>
-          {manifest && versionId && (
+      <header className="bg-surface border-rule flex items-center gap-4 border-b px-4 py-[18px] sm:gap-6 sm:px-8">
+        <a
+          href="https://avilist.org/"
+          aria-label="AviList — The Global Avian Checklist"
+        >
+          <img
+            src={logo}
+            alt="AviList — The Global Avian Checklist"
+            className="block h-9 w-auto"
+          />
+        </a>
+        {manifest && versionId && (
+          <div className="ml-auto sm:ml-0">
             <VersionPicker
               versions={manifest.versions}
               current={versionId}
               onChange={handleVersionChange}
             />
-          )}
-        </div>
-        <div className="flex items-center gap-7 justify-self-end">
+          </div>
+        )}
+        <div className="hidden sm:ml-auto sm:flex">
           <Popover open={downloadOpen} onOpenChange={setDownloadOpen}>
             <PopoverTrigger asChild>
               <button
