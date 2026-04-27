@@ -94,7 +94,7 @@ const columns: ColumnDef<Species>[] = [
   {
     accessorKey: "Scientific_name",
     header: "Scientific name",
-    size: 280,
+    size: 360,
     cell: (ctx) => (
       <ScientificCell value={ctx.getValue() as string | undefined} />
     ),
@@ -225,11 +225,19 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
               }}
               onClick={() => onSelect(row.original)}
             >
-              {row.getVisibleCells().map((cell) => (
-                <div key={cell.id} className="mu-cell mu-cell-truncate">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </div>
-              ))}
+              {row.getVisibleCells().map((cell) => {
+                const v = cell.getValue();
+                const title = typeof v === "string" ? v : undefined;
+                return (
+                  <div
+                    key={cell.id}
+                    className="mu-cell mu-cell-truncate"
+                    title={title}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </div>
+                );
+              })}
             </div>
           );
         })}

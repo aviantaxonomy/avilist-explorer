@@ -63,7 +63,6 @@ export function FilterBar({ filters, facets, onChange, resultsLabel }: Props) {
           selected={filters.ranks}
           onChange={(next) => update("ranks", next)}
           formatLabel={capitalize}
-          formatTriggerValue={capitalize}
         />
 
         <MultiSelectFilter
@@ -83,7 +82,6 @@ export function FilterBar({ filters, facets, onChange, resultsLabel }: Props) {
             const english = facets.familyEnglish[value];
             return english ? [english] : [];
           }}
-          formatTriggerValue={(value) => facets.familyEnglish[value] ?? value}
           formatLabel={(value) => {
             const english = facets.familyEnglish[value];
             if (!english) return <span className="italic">{value}</span>;

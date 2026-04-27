@@ -22,7 +22,6 @@ type Props = {
   selected: Set<string>;
   onChange: (next: Set<string>) => void;
   formatLabel?: (value: string) => ReactNode;
-  formatTriggerValue?: (value: string) => string;
   getKeywords?: (value: string) => string[];
   popoverWidth?: string;
 };
@@ -33,7 +32,6 @@ export function MultiSelectFilter({
   selected,
   onChange,
   formatLabel = (v) => v,
-  formatTriggerValue = (v) => v,
   getKeywords,
   popoverWidth = "w-72",
 }: Props) {
@@ -65,20 +63,10 @@ export function MultiSelectFilter({
       }}
     >
       <PopoverTrigger asChild>
-        <button
-          type="button"
-          className={cn("mu-chip", selected.size > 0 && "is-active")}
-        >
+        <button type="button" className="mu-chip">
           <span className="mu-chip-label">{label}</span>
           {selected.size > 0 && (
-            <>
-              <span className="mu-chip-sep">·</span>
-              <span className="mu-chip-value">
-                {selected.size === 1
-                  ? formatTriggerValue([...selected][0])
-                  : `${selected.size} selected`}
-              </span>
-            </>
+            <span className="mu-chip-count">{selected.size}</span>
           )}
           <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
             <path
