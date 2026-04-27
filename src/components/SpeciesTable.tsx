@@ -289,7 +289,7 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
               className={[
                 "border-rule absolute inset-x-0 grid cursor-pointer border-b text-[13px] transition-colors",
                 rowRank === "species"
-                  ? "bg-warm/80 hover:bg-warm"
+                  ? "bg-warm/60 hover:bg-warm/85"
                   : "hover:bg-[rgba(0,0,0,0.025)]",
                 rowRank === "subspecies" ? "opacity-60" : "",
                 isSelected
