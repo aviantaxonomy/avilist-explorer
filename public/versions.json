@@ -32,7 +32,7 @@
       "id": "2025.06",
       "label": "v2025.06",
       "released": "11 Jun 2025",
-      "inputXlsx": "AviList-v2025-11Jun-extended.xlsx",
+      "inputXlsx": "xlsx/AviList-v2025-11Jun-extended.xlsx",
       "sheet": "AviList v2025 extended",
       "clementsVersion": "v2024",
       "birdLifeVersion": "v9"
