@@ -516,11 +516,11 @@ body[data-rankpalette="ornitho"] .mu-rank-badge-subspecies {
   padding: 18px 20px;
 }
 .mu-section-label {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ink-3);
+  color: var(--ink-2);
   margin-bottom: 12px;
 }
 
@@ -622,4 +622,158 @@ body[data-rankpalette="ornitho"] .mu-rank-badge-subspecies {
 .mu-mono {
   font-family: "JetBrains Mono", monospace;
   font-size: 12px;
+}
+
+/* Range */
+.mu-range {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+/* Other names */
+.mu-alt-names {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+.mu-alt-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 16px;
+  align-items: baseline;
+}
+.mu-alt-row dt {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 600;
+  margin: 0;
+}
+.mu-alt-row dd {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+/* First described */
+.mu-orig-head {
+  margin-bottom: 16px;
+}
+.mu-orig-protonym {
+  font-family: "Fraunces", serif;
+  font-style: italic;
+  font-size: 18px;
+  color: var(--ink);
+  line-height: 1.2;
+}
+.mu-orig-authority {
+  font-size: 12px;
+  color: var(--ink-3);
+  margin-top: 4px;
+}
+.mu-orig-pub {
+  margin-bottom: 14px;
+}
+.mu-orig-title {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+.mu-orig-title a {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule);
+  display: inline;
+}
+.mu-orig-title a:hover {
+  border-bottom-color: var(--ink);
+}
+.mu-orig-cite {
+  font-size: 12px;
+  color: var(--ink-2);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+.mu-orig-cite a {
+  color: var(--ink-2);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule);
+}
+.mu-orig-cite a:hover {
+  border-bottom-color: var(--ink-2);
+}
+.mu-orig-typeloc {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.mu-orig-typeloc-label {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+/* Inline link icon */
+.mu-link-icon {
+  width: 12px;
+  height: 12px;
+  margin-left: 4px;
+  display: inline-block;
+  vertical-align: -2px;
+  color: var(--ink-3);
+}
+
+/* External resources list */
+.mu-resources {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mu-resources a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  margin: 0 -10px;
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--ink);
+  text-decoration: none;
+}
+.mu-resources a:hover {
+  background: var(--surface);
+}
+.mu-resources .mu-link-icon {
+  margin-left: 0;
+}
+
+/* Decision_summary HTML rendering */
+.mu-prose {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+.mu-prose em {
+  font-family: "Fraunces", serif;
+  font-style: italic;
+}
+.mu-prose strong {
+  font-weight: 600;
+}
+.mu-prose p {
+  margin: 0 0 10px;
+}
+.mu-prose p:last-child {
+  margin-bottom: 0;
 }
