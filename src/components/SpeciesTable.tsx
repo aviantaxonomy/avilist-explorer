@@ -36,6 +36,20 @@ const iucnSort = (a: Row<Species>, b: Row<Species>, id: string) => {
   return av - bv;
 };
 
+const RANK_HIERARCHY: Record<string, number> = {
+  order: 0,
+  family: 1,
+  genus: 2,
+  species: 3,
+  subspecies: 4,
+};
+
+const rankSort = (a: Row<Species>, b: Row<Species>, id: string) => {
+  const av = RANK_HIERARCHY[(a.getValue(id) as string) ?? ""] ?? 99;
+  const bv = RANK_HIERARCHY[(b.getValue(id) as string) ?? ""] ?? 99;
+  return av - bv;
+};
+
 function RankBadge({ rank }: { rank?: string }) {
   if (!rank || !RANK_KEYS.has(rank)) return null;
   return (
@@ -85,18 +99,20 @@ type Props = {
 
 export function SpeciesTable({ data, selected, onSelect }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "sequence", desc: false },
+  ]);
 
   const columns = useMemo<ColumnDef<Species>[]>(
     () => [
       {
-        id: "index",
+        accessorKey: "sequence",
         header: "#",
         size: 73,
-        enableSorting: false,
+        sortingFn: "alphanumeric",
         cell: (ctx) => (
           <span className="font-mono text-ink-3 text-[11px] [font-variant-numeric:tabular-nums]">
-            {ctx.row.index + 1}
+            {ctx.getValue() as string | undefined}
           </span>
         ),
       },
@@ -104,29 +120,9 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
         accessorKey: "rank",
         header: "Rank",
         size: 120,
-        enableSorting: false,
+        sortingFn: rankSort,
         cell: (ctx) => (
           <RankBadge rank={ctx.getValue() as string | undefined} />
-        ),
-      },
-      { accessorKey: "order", header: "Order", size: 170, cell: renderText },
-      { accessorKey: "family", header: "Family", size: 160, cell: renderText },
-      {
-        accessorKey: "familyEn",
-        header: "Family (English)",
-        size: 200,
-        enableSorting: false,
-        cell: renderText,
-      },
-      {
-        accessorKey: "sciName",
-        header: "Scientific name",
-        size: 360,
-        cell: (ctx) => (
-          <ScientificCell
-            value={ctx.getValue() as string | undefined}
-            rank={ctx.row.original.rank}
-          />
         ),
       },
       {
@@ -136,10 +132,27 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
         cell: renderText,
       },
       {
+        accessorKey: "sciName",
+        header: "Scientific name",
+        size: 280,
+        cell: (ctx) => (
+          <ScientificCell
+            value={ctx.getValue() as string | undefined}
+            rank={ctx.row.original.rank}
+          />
+        ),
+      },
+      {
+        accessorKey: "range",
+        header: "Range",
+        size: 420,
+        cell: renderText,
+      },
+      {
         accessorKey: "proposalNumber",
         header: "Decision",
         size: 104,
-        enableSorting: false,
+        sortingFn: "alphanumeric",
         cell: (ctx) => {
           const value = ctx.getValue() as string | undefined;
           if (!value) return null;
@@ -224,7 +237,7 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
                 "flex items-center gap-1 truncate px-3 py-3 text-[11px] font-semibold uppercase tracking-wider select-none",
                 isFirst ? "pl-6" : "",
                 canSort ? "cursor-pointer" : "",
-                sorted ? "text-accent" : "text-ink-2",
+                sorted ? "text-forest" : "text-ink-2",
               ].join(" ")}
               onClick={
                 canSort ? header.column.getToggleSortingHandler() : undefined
@@ -242,7 +255,7 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
                   height="10"
                   viewBox="0 0 10 10"
                   aria-hidden="true"
-                  className={`shrink-0 ${sorted ? "text-accent" : "text-ink-3"}`}
+                  className={`shrink-0 ${sorted ? "text-forest" : "text-ink-3"}`}
                 >
                   {sorted === "asc" ? (
                     <path
@@ -310,10 +323,15 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
                 return (
                   <div
                     key={cell.id}
-                    className={`flex items-center truncate px-3 ${i === 0 ? "pl-6" : ""}`}
+                    className={`flex items-center overflow-hidden px-3 ${i === 0 ? "pl-6" : ""}`}
                     title={title}
                   >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    <span className="block w-full truncate">
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </span>
                   </div>
                 );
               })}

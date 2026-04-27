@@ -7,7 +7,7 @@
   --color-ink-2: #44443e;
   --color-ink-3: #8a8a82;
   --color-rule: #e8e6dc;
-  --color-accent: #1a4d3a;
+  --color-forest: #1a4d3a; /* renamed from --color-accent — collided with shadcn */
   --color-accent-2: #c83e1f;
   --color-warm: #f5f1e6;
   --color-selected: #fff7e0;
