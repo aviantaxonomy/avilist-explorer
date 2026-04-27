@@ -14,6 +14,15 @@ const BASIC_FIELDS: Column[] = [
 
 export type CsvVariant = "basic" | "extended";
 
+/**
+ * Resolve the export header for a canonical field. By convention,
+ * `columnMap[field][0]` is the canonical xlsx name and what we use as the
+ * CSV column header. Falls back to the canonical name itself.
+ */
+function headerFor(field: Column, columnMap?: Record<string, string[]>) {
+  return columnMap?.[field]?.[0] ?? field;
+}
+
 function stripHtml(s: string): string {
   if (!s.includes("<") && !s.includes("&")) return s;
   return s
@@ -31,10 +40,15 @@ function escape(v: unknown): string {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
-export function downloadCsv(rows: Species[], variant: CsvVariant) {
+export function downloadCsv(
+  rows: Species[],
+  variant: CsvVariant,
+  columnMap?: Record<string, string[]>,
+) {
   const fields: Column[] =
     variant === "basic" ? BASIC_FIELDS : ([...COLUMNS] as Column[]);
-  const lines = [fields.join(",")];
+  const headers = fields.map((f) => escape(headerFor(f, columnMap)));
+  const lines = [headers.join(",")];
   for (const t of rows) {
     lines.push(fields.map((f) => escape(t[f])).join(","));
   }

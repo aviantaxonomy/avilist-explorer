@@ -131,7 +131,7 @@ export function App() {
         </div>
       </header>
 
-      {currentVersion && data && filtered && (
+      {currentVersion && data && filtered && manifest && (
         <DownloadDialog
           open={downloadOpen}
           onOpenChange={setDownloadOpen}
@@ -139,6 +139,7 @@ export function App() {
           data={data}
           filtered={filtered}
           filtersActive={isFilterActive(filters)}
+          columnMap={manifest.columnMap}
         />
       )}
 

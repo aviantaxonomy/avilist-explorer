@@ -34,9 +34,12 @@ export function parseProposalNumbers(raw: string): string[] {
 
 export type VersionsManifest = {
   /**
-   * Maps each canonical field (see src/columns.ts) → array of possible xlsx
-   * column names. The converter tries each in order and uses the first match.
-   * Add aliases here as AviList renames columns across editions.
+   * Maps each canonical field (see src/columns.ts) → array of xlsx column
+   * names. Convention:
+   *   - Index 0 is the **canonical/preferred** name. The extractor tries it
+   *     first, and CSV exports use it as the column header.
+   *   - Subsequent entries are fallback aliases for older editions where
+   *     the column had a different name.
    */
   columnMap?: Record<string, string[]>;
   versions: Version[];
