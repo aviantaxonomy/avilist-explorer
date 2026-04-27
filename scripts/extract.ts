@@ -1,5 +1,11 @@
 import ExcelJS from "exceljs";
-import { writeFile, mkdir, stat, readFile } from "node:fs/promises";
+import {
+  copyFile,
+  mkdir,
+  readFile,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import { dirname } from "node:path";
 import { gzipSync, constants as zlibConstants } from "node:zlib";
 import { COLUMNS } from "../src/columns.ts";
@@ -10,7 +16,8 @@ type Version = {
   id: string;
   label: string;
   released: string;
-  inputXlsx: string;
+  extendedXlsx: string;
+  basicXlsx: string;
   sheet: string;
 };
 
@@ -76,15 +83,15 @@ async function processVersion(
   columnMap: Record<string, string[]>,
 ): Promise<void> {
   console.log(`\n=== ${version.id} ===`);
-  console.log(`Reading ${version.inputXlsx}…`);
+  console.log(`Reading ${version.extendedXlsx}…`);
 
   const wb = new ExcelJS.Workbook();
-  await wb.xlsx.readFile(version.inputXlsx);
+  await wb.xlsx.readFile(version.extendedXlsx);
 
   const sheet = wb.getWorksheet(version.sheet);
   if (!sheet) {
     throw new Error(
-      `Sheet "${version.sheet}" not found in ${version.inputXlsx}`,
+      `Sheet "${version.sheet}" not found in ${version.extendedXlsx}`,
     );
   }
 
@@ -156,6 +163,14 @@ async function processVersion(
 
   const { size } = await stat(outPath);
   console.log(`  Wrote ${outPath} (${(size / 1024 / 1024).toFixed(2)} MB)`);
+
+  // Copy the source xlsx files into public/data/ so they're servable as
+  // download assets.
+  const extendedDest = `public/data/avilist-${version.id}-extended.xlsx`;
+  const basicDest = `public/data/avilist-${version.id}-basic.xlsx`;
+  await copyFile(version.extendedXlsx, extendedDest);
+  await copyFile(version.basicXlsx, basicDest);
+  console.log(`  Copied xlsx files to public/data/`);
 }
 
 async function main() {

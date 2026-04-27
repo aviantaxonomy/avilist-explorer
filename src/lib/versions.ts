@@ -2,7 +2,8 @@ export type Version = {
   id: string;
   label: string;
   released: string;
-  inputXlsx: string;
+  extendedXlsx: string;
+  basicXlsx: string;
   sheet: string;
   clementsVersion: string;
   birdLifeVersion: string;
@@ -47,6 +48,13 @@ const BASE = import.meta.env.BASE_URL;
 
 export function dataPathFor(version: Version): string {
   return `${BASE}data/avilist-${version.id}.json.gz`;
+}
+
+export function xlsxUrlFor(
+  version: Version,
+  variant: "basic" | "extended",
+): string {
+  return `${BASE}data/avilist-${version.id}-${variant}.xlsx`;
 }
 
 export function defaultVersion(manifest: VersionsManifest): Version | null {

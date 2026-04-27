@@ -12,7 +12,7 @@ const BASIC_FIELDS: Column[] = [
   "iucn",
 ];
 
-export type CsvVariant = "basic" | "expanded";
+export type CsvVariant = "basic" | "extended";
 
 function stripHtml(s: string): string {
   if (!s.includes("<") && !s.includes("&")) return s;
@@ -51,5 +51,5 @@ export function downloadCsv(rows: Species[], variant: CsvVariant) {
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
-export const EXPANDED_FIELD_COUNT = COLUMNS.length;
+export const EXTENDED_FIELD_COUNT = COLUMNS.length;
 export const BASIC_FIELD_COUNT = BASIC_FIELDS.length;

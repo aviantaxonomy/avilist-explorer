@@ -1,22 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { SpeciesTable } from "@/components/SpeciesTable";
 import { FilterBar } from "@/components/FilterBar";
 import { DetailPanel } from "@/components/DetailPanel";
 import { VersionPicker } from "@/components/VersionPicker";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { DownloadDialog } from "@/components/DownloadDialog";
 import { loadSpecies, type Species } from "@/lib/data";
 import {
   applyFilters,
   computeFacets,
   emptyFilters,
+  isFilterActive,
   type FilterState,
 } from "@/lib/filters";
-import { downloadCsv } from "@/lib/csv";
 import {
   dataPathFor,
   defaultVersion,
@@ -90,12 +86,6 @@ export function App() {
     setVersionId(id);
   };
 
-  const handleDownload = (variant: "basic" | "expanded") => {
-    if (!filtered) return;
-    downloadCsv(filtered, variant);
-    setDownloadOpen(false);
-  };
-
   return (
     <div className="bg-bg text-ink font-sans flex h-screen flex-col overflow-hidden">
       <header className="bg-surface border-rule flex items-center gap-4 border-b px-4 py-[18px] sm:gap-6 sm:px-8">
@@ -119,51 +109,38 @@ export function App() {
           </div>
         )}
         <div className="hidden sm:ml-auto sm:flex">
-          <Popover open={downloadOpen} onOpenChange={setDownloadOpen}>
-            <PopoverTrigger asChild>
-              <button
-                type="button"
-                disabled={!filtered}
-                className="bg-ink text-bg inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border-0 px-4 text-[13px] font-medium hover:bg-[#2c2c28] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  aria-hidden="true"
-                >
-                  <path d="M8 1v9M4 7l4 4 4-4M2 14h12" />
-                </svg>
-                Download CSV
-                <ChevronDown className="size-3.5 opacity-70" />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent
-              className="w-40 gap-0 p-1"
-              align="end"
-              sideOffset={6}
+          <button
+            type="button"
+            disabled={!filtered}
+            onClick={() => setDownloadOpen(true)}
+            className="bg-ink text-bg inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border-0 px-4 text-[13px] font-medium hover:bg-[#2c2c28] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              aria-hidden="true"
             >
-              <button
-                type="button"
-                className="hover:bg-bg text-ink w-full cursor-pointer rounded px-3 py-2 text-left text-sm"
-                onClick={() => handleDownload("basic")}
-              >
-                Basic
-              </button>
-              <button
-                type="button"
-                className="hover:bg-bg text-ink w-full cursor-pointer rounded px-3 py-2 text-left text-sm"
-                onClick={() => handleDownload("expanded")}
-              >
-                Expanded
-              </button>
-            </PopoverContent>
-          </Popover>
+              <path d="M8 1v9M4 7l4 4 4-4M2 14h12" />
+            </svg>
+            Download
+          </button>
         </div>
       </header>
+
+      {currentVersion && data && filtered && (
+        <DownloadDialog
+          open={downloadOpen}
+          onOpenChange={setDownloadOpen}
+          version={currentVersion}
+          data={data}
+          filtered={filtered}
+          filtersActive={isFilterActive(filters)}
+        />
+      )}
 
       {error && <div className="text-accent-2 p-8">{error}</div>}
       {!data && !error && (
