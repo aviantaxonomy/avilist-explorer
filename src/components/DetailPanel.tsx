@@ -2,11 +2,16 @@ import { useEffect } from "react";
 import { ExternalLink } from "lucide-react";
 import type { Species } from "@/lib/data";
 import { IUCN_BAR_ORDER, IUCN_INFO, type IucnCode } from "@/lib/iucn";
-import type { Version } from "@/lib/versions";
+import {
+  formatProposalNumber,
+  parseProposalNumbers,
+  type Version,
+} from "@/lib/versions";
 
 type Props = {
   taxon: Species;
   version: Version;
+  scrollTo?: string | null;
   onClose: () => void;
 };
 
@@ -40,7 +45,7 @@ const SECTION_LABEL =
 const META_LABEL =
   "text-ink-3 text-[11px] font-semibold uppercase tracking-wider";
 
-export function DetailPanel({ taxon, version, onClose }: Props) {
+export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -48,6 +53,14 @@ export function DetailPanel({ taxon, version, onClose }: Props) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  useEffect(() => {
+    if (!scrollTo) return;
+    // The panel mounts fresh per selection, so the section is already in the
+    // DOM by the time this effect runs.
+    const el = document.getElementById(scrollTo);
+    if (el) el.scrollIntoView({ block: "start", behavior: "smooth" });
+  }, [scrollTo, taxon]);
 
   const rank = taxon.rank ?? "species";
   const ancestry = buildLineage(taxon);
@@ -160,6 +173,28 @@ export function DetailPanel({ taxon, version, onClose }: Props) {
               </li>
             </ol>
           </section>
+
+          {taxon.decisionSummary && (
+            <section
+              id="decision-summary"
+              className="bg-bg rounded-xl px-5 py-4"
+            >
+              <div className={SECTION_LABEL}>
+                Decision Summary
+                {taxon.proposalNumber && (
+                  <span className="text-ink-3 ml-2 font-mono text-[11px] tracking-normal normal-case">
+                    {parseProposalNumbers(taxon.proposalNumber)
+                      .map((n) => formatProposalNumber(version, n))
+                      .join(", ")}
+                  </span>
+                )}
+              </div>
+              <div
+                className="prose-museum text-ink text-sm leading-[1.6]"
+                dangerouslySetInnerHTML={{ __html: taxon.decisionSummary }}
+              />
+            </section>
+          )}
 
           {taxon.range && (
             <section className="bg-bg rounded-xl px-5 py-4">
@@ -310,15 +345,6 @@ export function DetailPanel({ taxon, version, onClose }: Props) {
             </section>
           )}
 
-          {taxon.decisionSummary && (
-            <section className="bg-bg rounded-xl px-5 py-4">
-              <div className={SECTION_LABEL}>Taxonomic notes</div>
-              <div
-                className="prose-museum text-ink text-sm leading-[1.6]"
-                dangerouslySetInnerHTML={{ __html: taxon.decisionSummary }}
-              />
-            </section>
-          )}
 
           {links.length > 0 && (
             <section className="bg-bg rounded-xl px-5 py-4">

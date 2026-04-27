@@ -34,7 +34,18 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterState>(emptyFilters);
   const [selected, setSelected] = useState<Species | null>(null);
+  const [scrollTarget, setScrollTarget] = useState<string | null>(null);
   const [downloadOpen, setDownloadOpen] = useState(false);
+
+  const handleSelect = (s: Species, scrollTo?: string) => {
+    setSelected(s);
+    setScrollTarget(scrollTo ?? null);
+  };
+
+  const handleClosePanel = () => {
+    setSelected(null);
+    setScrollTarget(null);
+  };
 
   useEffect(() => {
     loadVersions().then(
@@ -179,7 +190,7 @@ export function App() {
           <SpeciesTable
             data={filtered}
             selected={selected}
-            onSelect={setSelected}
+            onSelect={handleSelect}
           />
         </>
       )}
@@ -188,7 +199,8 @@ export function App() {
         <DetailPanel
           taxon={selected}
           version={currentVersion}
-          onClose={() => setSelected(null)}
+          scrollTo={scrollTarget}
+          onClose={handleClosePanel}
         />
       )}
     </div>

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -10,6 +10,7 @@ import {
   type SortingState,
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { FileText } from "lucide-react";
 import type { Species } from "@/lib/data";
 import { IUCN_INFO, type IucnCode } from "@/lib/iucn";
 
@@ -72,87 +73,116 @@ const renderText = (info: CellContext<Species, unknown>) => {
   return v ?? <span className="text-ink-3">—</span>;
 };
 
-const columns: ColumnDef<Species>[] = [
-  {
-    id: "index",
-    header: "#",
-    size: 56,
-    enableSorting: false,
-    cell: (ctx) => (
-      <span className="font-mono text-ink-3 text-[11px] [font-variant-numeric:tabular-nums]">
-        {ctx.row.index + 1}
-      </span>
-    ),
-  },
-  {
-    accessorKey: "rank",
-    header: "Rank",
-    size: 120,
-    enableSorting: false,
-    cell: (ctx) => <RankBadge rank={ctx.getValue() as string | undefined} />,
-  },
-  { accessorKey: "order", header: "Order", size: 170, cell: renderText },
-  { accessorKey: "family", header: "Family", size: 160, cell: renderText },
-  {
-    accessorKey: "familyEn",
-    header: "Family (English)",
-    size: 200,
-    enableSorting: false,
-    cell: renderText,
-  },
-  {
-    accessorKey: "sciName",
-    header: "Scientific name",
-    size: 360,
-    cell: (ctx) => (
-      <ScientificCell value={ctx.getValue() as string | undefined} />
-    ),
-  },
-  {
-    accessorKey: "name",
-    header: "English name",
-    size: 200,
-    cell: (ctx) => {
-      const v = ctx.getValue() as string | undefined;
-      return v ? (
-        <span className="text-ink-2">{v}</span>
-      ) : (
-        <span className="text-ink-3">—</span>
-      );
-    },
-  },
-  {
-    accessorKey: "iucn",
-    header: "IUCN",
-    size: 120,
-    sortingFn: iucnSort,
-    cell: (ctx) => <IucnPill code={ctx.getValue() as string | undefined} />,
-  },
-  {
-    id: "details",
-    header: "",
-    size: 96,
-    enableSorting: false,
-    cell: () => (
-      <button
-        type="button"
-        className="text-ink-3 hover:text-ink cursor-pointer text-[12px] font-medium underline underline-offset-2"
-      >
-        Details
-      </button>
-    ),
-  },
-];
-
 type Props = {
   data: Species[];
   selected: Species | null;
-  onSelect: (s: Species) => void;
+  onSelect: (s: Species, scrollTo?: string) => void;
 };
 
 export function SpeciesTable({ data, selected, onSelect }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
+
+  const columns = useMemo<ColumnDef<Species>[]>(
+    () => [
+      {
+        id: "index",
+        header: "#",
+        size: 56,
+        enableSorting: false,
+        cell: (ctx) => (
+          <span className="font-mono text-ink-3 text-[11px] [font-variant-numeric:tabular-nums]">
+            {ctx.row.index + 1}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "rank",
+        header: "Rank",
+        size: 120,
+        enableSorting: false,
+        cell: (ctx) => (
+          <RankBadge rank={ctx.getValue() as string | undefined} />
+        ),
+      },
+      { accessorKey: "order", header: "Order", size: 170, cell: renderText },
+      { accessorKey: "family", header: "Family", size: 160, cell: renderText },
+      {
+        accessorKey: "familyEn",
+        header: "Family (English)",
+        size: 200,
+        enableSorting: false,
+        cell: renderText,
+      },
+      {
+        accessorKey: "sciName",
+        header: "Scientific name",
+        size: 360,
+        cell: (ctx) => (
+          <ScientificCell value={ctx.getValue() as string | undefined} />
+        ),
+      },
+      {
+        accessorKey: "name",
+        header: "English name",
+        size: 200,
+        cell: (ctx) => {
+          const v = ctx.getValue() as string | undefined;
+          return v ? (
+            <span className="text-ink-2">{v}</span>
+          ) : (
+            <span className="text-ink-3">—</span>
+          );
+        },
+      },
+      {
+        accessorKey: "proposalNumber",
+        header: "Decision",
+        size: 104,
+        enableSorting: false,
+        cell: (ctx) => {
+          const value = ctx.getValue() as string | undefined;
+          if (!value) return null;
+          return (
+            <button
+              type="button"
+              className="text-ink-3 hover:bg-warm hover:text-ink inline-flex cursor-pointer items-center gap-1 rounded px-2 py-1"
+              title="View decision summary"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect(ctx.row.original, "decision-summary");
+              }}
+            >
+              <FileText className="size-3.5" />
+              <span className="text-[12px] font-medium">View</span>
+            </button>
+          );
+        },
+      },
+      {
+        accessorKey: "iucn",
+        header: "IUCN",
+        size: 120,
+        sortingFn: iucnSort,
+        cell: (ctx) => <IucnPill code={ctx.getValue() as string | undefined} />,
+      },
+      {
+        id: "details",
+        header: "",
+        size: 96,
+        enableSorting: false,
+        cell: () => (
+          <button
+            type="button"
+            className="text-ink-3 hover:text-ink cursor-pointer text-[12px] font-medium underline underline-offset-2"
+          >
+            Details
+          </button>
+        ),
+      },
+    ],
+    [onSelect],
+  );
 
   const table = useReactTable({
     data,

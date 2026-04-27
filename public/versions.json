@@ -35,7 +35,8 @@
       "inputXlsx": "xlsx/AviList-v2025-11Jun-extended.xlsx",
       "sheet": "AviList v2025 extended",
       "clementsVersion": "v2024",
-      "birdLifeVersion": "v9"
+      "birdLifeVersion": "v9",
+      "decisionSummaryPrefix": "2025"
     }
   ]
 }

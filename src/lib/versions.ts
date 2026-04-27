@@ -6,7 +6,30 @@ export type Version = {
   sheet: string;
   clementsVersion: string;
   birdLifeVersion: string;
+  /** Prefix used to namespace proposal numbers, e.g. "2025" → "2025-117". */
+  decisionSummaryPrefix: string;
 };
+
+/**
+ * Format a single proposal number with the version's prefix.
+ * Nomenclatural Advisory Group items keep their `N-` prefix and the year
+ * slides in between: `N-70` → `N-2025-70`. Regular: `117` → `2025-117`.
+ */
+export function formatProposalNumber(version: Version, num: string): string {
+  const prefix = version.decisionSummaryPrefix;
+  const trimmed = num.trim();
+  if (!prefix) return trimmed;
+  if (/^N-/i.test(trimmed)) return `N-${prefix}-${trimmed.slice(2)}`;
+  return `${prefix}-${trimmed}`;
+}
+
+/** Split a `proposalNumber` cell that may contain multiple numbers. */
+export function parseProposalNumbers(raw: string): string[] {
+  return raw
+    .split(/[,;]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
 
 export type VersionsManifest = {
   /**
