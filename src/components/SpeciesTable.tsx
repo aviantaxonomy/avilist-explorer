@@ -128,6 +128,20 @@ const columns: ColumnDef<Species>[] = [
     sortingFn: iucnSort,
     cell: (ctx) => <IucnPill code={ctx.getValue() as string | undefined} />,
   },
+  {
+    id: "details",
+    header: "",
+    size: 96,
+    enableSorting: false,
+    cell: () => (
+      <button
+        type="button"
+        className="text-ink-3 hover:text-ink cursor-pointer text-[12px] font-medium underline underline-offset-2"
+      >
+        Details
+      </button>
+    ),
+  },
 ];
 
 type Props = {

@@ -1,8 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
+import { ChevronDown, Loader2 } from "lucide-react";
 import { SpeciesTable } from "@/components/SpeciesTable";
 import { FilterBar } from "@/components/FilterBar";
 import { DetailPanel } from "@/components/DetailPanel";
 import { VersionPicker } from "@/components/VersionPicker";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { loadSpecies, type Species } from "@/lib/data";
 import {
   applyFilters,
@@ -28,6 +34,7 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterState>(emptyFilters);
   const [selected, setSelected] = useState<Species | null>(null);
+  const [downloadOpen, setDownloadOpen] = useState(false);
 
   useEffect(() => {
     loadVersions().then(
@@ -41,14 +48,25 @@ export function App() {
     );
   }, []);
 
+  const currentVersion = useMemo(() => {
+    if (!manifest || !versionId) return null;
+    return manifest.versions.find((v) => v.id === versionId) ?? null;
+  }, [manifest, versionId]);
+
   useEffect(() => {
-    if (!manifest || !versionId) return;
-    const version = manifest.versions.find((v) => v.id === versionId);
-    if (!version) return;
+    if (!currentVersion) return;
     setData(null);
     setSelected(null);
-    loadSpecies(dataPathFor(version)).then(setData, (e) => setError(String(e)));
-  }, [manifest, versionId]);
+    loadSpecies(dataPathFor(currentVersion)).then(setData, (e) =>
+      setError(String(e)),
+    );
+  }, [currentVersion]);
+
+  useEffect(() => {
+    document.title = currentVersion
+      ? `AviList ${currentVersion.label}`
+      : "AviList Explorer";
+  }, [currentVersion]);
 
   const facets = useMemo(() => (data ? computeFacets(data) : null), [data]);
   const filtered = useMemo(
@@ -61,15 +79,26 @@ export function App() {
     setVersionId(id);
   };
 
+  const handleDownload = (variant: "basic" | "expanded") => {
+    if (!filtered) return;
+    downloadCsv(filtered, variant);
+    setDownloadOpen(false);
+  };
+
   return (
     <div className="bg-bg text-ink font-sans flex h-screen flex-col overflow-hidden">
       <header className="bg-surface border-rule grid grid-cols-[auto_1fr] items-center gap-8 border-b px-8 py-[18px]">
         <div className="flex items-center gap-6">
-          <img
-            src={logo}
-            alt="AviList — The Global Avian Checklist"
-            className="block h-9 w-auto"
-          />
+          <a
+            href="https://avilist.org/"
+            aria-label="AviList — The Global Avian Checklist"
+          >
+            <img
+              src={logo}
+              alt="AviList — The Global Avian Checklist"
+              className="block h-9 w-auto"
+            />
+          </a>
           {manifest && versionId && (
             <VersionPicker
               versions={manifest.versions}
@@ -79,30 +108,61 @@ export function App() {
           )}
         </div>
         <div className="flex items-center gap-7 justify-self-end">
-          <button
-            type="button"
-            disabled={!filtered}
-            onClick={() => filtered && downloadCsv(filtered)}
-            className="bg-ink text-bg inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border-0 px-4 text-[13px] font-medium hover:bg-[#2c2c28] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              aria-hidden="true"
+          <Popover open={downloadOpen} onOpenChange={setDownloadOpen}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                disabled={!filtered}
+                className="bg-ink text-bg inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border-0 px-4 text-[13px] font-medium hover:bg-[#2c2c28] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  aria-hidden="true"
+                >
+                  <path d="M8 1v9M4 7l4 4 4-4M2 14h12" />
+                </svg>
+                Download CSV
+                <ChevronDown className="size-3.5 opacity-70" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-40 gap-0 p-1"
+              align="end"
+              sideOffset={6}
             >
-              <path d="M8 1v9M4 7l4 4 4-4M2 14h12" />
-            </svg>
-            Download CSV
-          </button>
+              <button
+                type="button"
+                className="hover:bg-bg text-ink w-full cursor-pointer rounded px-3 py-2 text-left text-sm"
+                onClick={() => handleDownload("basic")}
+              >
+                Basic
+              </button>
+              <button
+                type="button"
+                className="hover:bg-bg text-ink w-full cursor-pointer rounded px-3 py-2 text-left text-sm"
+                onClick={() => handleDownload("expanded")}
+              >
+                Expanded
+              </button>
+            </PopoverContent>
+          </Popover>
         </div>
       </header>
 
       {error && <div className="text-accent-2 p-8">{error}</div>}
-      {!data && !error && <div className="text-ink-3 p-8">Loading…</div>}
+      {!data && !error && (
+        <div className="flex flex-1 items-center justify-center">
+          <div className="text-ink-3 flex flex-col items-center gap-3">
+            <Loader2 className="size-8 animate-spin" />
+            <p className="text-sm">Loading taxa…</p>
+          </div>
+        </div>
+      )}
 
       {data && facets && filtered && (
         <>

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { MultiSelectFilter } from "./MultiSelectFilter";
 import {
   type FilterState,
@@ -9,6 +10,8 @@ import {
 } from "@/lib/filters";
 import { IUCN_INFO, type IucnCode } from "@/lib/iucn";
 
+const SEARCH_DEBOUNCE_MS = 200;
+
 type Props = {
   filters: FilterState;
   facets: Facets;
@@ -19,6 +22,22 @@ type Props = {
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export function FilterBar({ filters, facets, onChange, resultsLabel }: Props) {
+  const [searchValue, setSearchValue] = useState(filters.search);
+
+  // Reverse-sync when parent clears (e.g. "Clear all" button)
+  useEffect(() => {
+    setSearchValue(filters.search);
+  }, [filters.search]);
+
+  // Debounce local input → parent filter state
+  useEffect(() => {
+    if (searchValue === filters.search) return;
+    const t = setTimeout(() => {
+      onChange({ ...filters, search: searchValue });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [searchValue]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const update = <K extends keyof FilterState>(
     key: K,
     value: FilterState[K],
@@ -49,8 +68,8 @@ export function FilterBar({ filters, facets, onChange, resultsLabel }: Props) {
         </svg>
         <input
           type="search"
-          value={filters.search}
-          onChange={(e) => update("search", e.target.value)}
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
           placeholder="Search by scientific or English name…"
           spellCheck={false}
           className="text-ink placeholder:text-ink-3 flex-1 border-0 bg-transparent text-sm outline-0"
