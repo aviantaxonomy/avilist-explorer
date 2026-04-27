@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { SpeciesTable } from "@/components/SpeciesTable";
 import { FilterBar } from "@/components/FilterBar";
 import { DetailPanel } from "@/components/DetailPanel";
-import { EditionPicker } from "@/components/EditionPicker";
+import { VersionPicker } from "@/components/VersionPicker";
 import { loadSpecies, type Species } from "@/lib/data";
 import {
   applyFilters,
@@ -11,39 +11,44 @@ import {
   type FilterState,
 } from "@/lib/filters";
 import { downloadCsv } from "@/lib/csv";
-import { loadEditions, type EditionsManifest } from "@/lib/editions";
+import {
+  dataPathFor,
+  defaultVersion,
+  loadVersions,
+  type VersionsManifest,
+} from "@/lib/versions";
 import logo from "@/assets/logo.webp";
 
-const STORAGE_KEY = "avilist:edition";
+const STORAGE_KEY = "avilist:version";
 
 export function App() {
-  const [manifest, setManifest] = useState<EditionsManifest | null>(null);
-  const [editionId, setEditionId] = useState<string | null>(null);
+  const [manifest, setManifest] = useState<VersionsManifest | null>(null);
+  const [versionId, setVersionId] = useState<string | null>(null);
   const [data, setData] = useState<Species[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterState>(emptyFilters);
   const [selected, setSelected] = useState<Species | null>(null);
 
   useEffect(() => {
-    loadEditions().then(
+    loadVersions().then(
       (m) => {
         setManifest(m);
         const stored = localStorage.getItem(STORAGE_KEY);
-        const valid = stored && m.editions.some((e) => e.id === stored);
-        setEditionId(valid ? stored : m.current);
+        const valid = stored && m.versions.some((v) => v.id === stored);
+        setVersionId(valid ? stored : (defaultVersion(m)?.id ?? null));
       },
       (e) => setError(String(e)),
     );
   }, []);
 
   useEffect(() => {
-    if (!manifest || !editionId) return;
-    const edition = manifest.editions.find((e) => e.id === editionId);
-    if (!edition) return;
+    if (!manifest || !versionId) return;
+    const version = manifest.versions.find((v) => v.id === versionId);
+    if (!version) return;
     setData(null);
     setSelected(null);
-    loadSpecies(edition.dataPath).then(setData, (e) => setError(String(e)));
-  }, [manifest, editionId]);
+    loadSpecies(dataPathFor(version)).then(setData, (e) => setError(String(e)));
+  }, [manifest, versionId]);
 
   const facets = useMemo(() => (data ? computeFacets(data) : null), [data]);
   const filtered = useMemo(
@@ -51,9 +56,9 @@ export function App() {
     [data, filters],
   );
 
-  const handleEditionChange = (id: string) => {
+  const handleVersionChange = (id: string) => {
     localStorage.setItem(STORAGE_KEY, id);
-    setEditionId(id);
+    setVersionId(id);
   };
 
   return (
@@ -65,11 +70,11 @@ export function App() {
             alt="AviList — The Global Avian Checklist"
             className="block h-9 w-auto"
           />
-          {manifest && editionId && (
-            <EditionPicker
-              editions={manifest.editions}
-              current={editionId}
-              onChange={handleEditionChange}
+          {manifest && versionId && (
+            <VersionPicker
+              versions={manifest.versions}
+              current={versionId}
+              onChange={handleVersionChange}
             />
           )}
         </div>

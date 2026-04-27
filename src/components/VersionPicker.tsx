@@ -11,18 +11,18 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { SelectIndicator } from "./SelectIndicator";
-import type { Edition } from "@/lib/editions";
+import type { Version } from "@/lib/versions";
 
 type Props = {
-  editions: Edition[];
+  versions: Version[];
   current: string;
   onChange: (id: string) => void;
 };
 
-export function EditionPicker({ editions, current, onChange }: Props) {
+export function VersionPicker({ versions, current, onChange }: Props) {
   const [open, setOpen] = useState(false);
-  const currentEdition = editions.find((e) => e.id === current);
-  const label = currentEdition?.label ?? current;
+  const currentVersion = versions.find((v) => v.id === current);
+  const label = currentVersion?.label ?? current;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -52,19 +52,19 @@ export function EditionPicker({ editions, current, onChange }: Props) {
         <Command>
           <CommandList>
             <CommandGroup>
-              {editions.map((e) => {
-                const active = e.id === current;
+              {versions.map((v) => {
+                const active = v.id === current;
                 return (
                   <CommandItem
-                    key={e.id}
-                    value={e.id}
+                    key={v.id}
+                    value={v.id}
                     onSelect={() => {
-                      onChange(e.id);
+                      onChange(v.id);
                       setOpen(false);
                     }}
                   >
                     <SelectIndicator active={active} shape="round" />
-                    <span>{e.label}</span>
+                    <span>{v.label}</span>
                   </CommandItem>
                 );
               })}

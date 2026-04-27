@@ -1,11 +1,11 @@
 {
-  "current": "2025.06",
-  "editions": [
+  "versions": [
     {
       "id": "2025.06",
       "label": "v2025.06",
       "released": "11 Jun 2025",
-      "dataPath": "/data/avilist-compact.json"
+      "inputXlsx": "AviList-v2025-11Jun-extended.xlsx",
+      "sheet": "AviList v2025 extended"
     }
   ]
 }
