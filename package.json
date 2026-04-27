@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "convert": "node scripts/convert.ts"
+    "extract": "node scripts/extract.ts"
   },
   "repository": {
     "type": "git",

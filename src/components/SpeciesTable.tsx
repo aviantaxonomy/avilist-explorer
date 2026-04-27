@@ -85,23 +85,23 @@ const columns: ColumnDef<Species>[] = [
     ),
   },
   {
-    accessorKey: "Taxon_rank",
+    accessorKey: "rank",
     header: "Rank",
     size: 120,
     enableSorting: false,
     cell: (ctx) => <RankBadge rank={ctx.getValue() as string | undefined} />,
   },
-  { accessorKey: "Order", header: "Order", size: 170, cell: renderText },
-  { accessorKey: "Family", header: "Family", size: 160, cell: renderText },
+  { accessorKey: "order", header: "Order", size: 170, cell: renderText },
+  { accessorKey: "family", header: "Family", size: 160, cell: renderText },
   {
-    accessorKey: "Family_English_name",
+    accessorKey: "familyEn",
     header: "Family (English)",
     size: 200,
     enableSorting: false,
     cell: renderText,
   },
   {
-    accessorKey: "Scientific_name",
+    accessorKey: "sciName",
     header: "Scientific name",
     size: 360,
     cell: (ctx) => (
@@ -109,7 +109,7 @@ const columns: ColumnDef<Species>[] = [
     ),
   },
   {
-    accessorKey: "English_name_AviList",
+    accessorKey: "name",
     header: "English name",
     size: 200,
     cell: (ctx) => {
@@ -122,7 +122,7 @@ const columns: ColumnDef<Species>[] = [
     },
   },
   {
-    accessorKey: "IUCN_Red_List_Category",
+    accessorKey: "iucn",
     header: "IUCN",
     size: 120,
     sortingFn: iucnSort,
@@ -252,7 +252,7 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
         {virtualizer.getVirtualItems().map((vRow) => {
           const row = rows[vRow.index];
           const isSelected =
-            selected != null && selected.Sequence === row.original.Sequence;
+            selected != null && selected.sequence === row.original.sequence;
           return (
             <div
               key={row.id}

@@ -21,10 +21,10 @@ export const IUCN_OPTIONS = [
 ] as const;
 
 const SEARCH_FIELDS = [
-  "Scientific_name",
-  "English_name_AviList",
-  "English_name_Clements_v2024",
-  "English_name_BirdLife_v9",
+  "sciName",
+  "name",
+  "nameClements",
+  "nameBirdLife",
 ] as const;
 
 export type FilterState = {
@@ -64,11 +64,11 @@ export function computeFacets(data: Species[]): Facets {
   const familySet = new Set<string>();
   const familyEnglish: Record<string, string> = {};
   for (const row of data) {
-    if (row.Order) orders.add(row.Order);
-    if (row.Family) {
-      familySet.add(row.Family);
-      if (row.Family_English_name && !familyEnglish[row.Family]) {
-        familyEnglish[row.Family] = row.Family_English_name;
+    if (row.order) orders.add(row.order);
+    if (row.family) {
+      familySet.add(row.family);
+      if (row.familyEn && !familyEnglish[row.family]) {
+        familyEnglish[row.family] = row.familyEn;
       }
     }
   }
@@ -89,15 +89,11 @@ export function applyFilters(data: Species[], f: FilterState): Species[] {
   const search = f.search.trim().toLowerCase();
   const result: Species[] = [];
   for (const row of data) {
-    if (f.ranks.size > 0 && (!row.Taxon_rank || !f.ranks.has(row.Taxon_rank)))
+    if (f.ranks.size > 0 && (!row.rank || !f.ranks.has(row.rank))) continue;
+    if (f.iucn.size > 0 && (!row.iucn || !f.iucn.has(row.iucn))) continue;
+    if (f.orders.size > 0 && (!row.order || !f.orders.has(row.order)))
       continue;
-    if (
-      f.iucn.size > 0 &&
-      (!row.IUCN_Red_List_Category || !f.iucn.has(row.IUCN_Red_List_Category))
-    )
-      continue;
-    if (f.orders.size > 0 && (!row.Order || !f.orders.has(row.Order))) continue;
-    if (f.families.size > 0 && (!row.Family || !f.families.has(row.Family)))
+    if (f.families.size > 0 && (!row.family || !f.families.has(row.family)))
       continue;
     if (search) {
       let match = false;

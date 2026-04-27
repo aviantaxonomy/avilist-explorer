@@ -15,13 +15,13 @@ type Lineage = { rank: string; name: string };
 const RANK_ORDER = ["order", "family", "genus", "species", "subspecies"];
 
 function buildLineage(t: Species): Lineage[] {
-  const rank = t.Taxon_rank ?? "";
+  const rank = t.rank ?? "";
   const idx = RANK_ORDER.indexOf(rank);
   if (idx === -1) return [];
   const out: Lineage[] = [];
-  if (t.Order && idx > 0) out.push({ rank: "order", name: t.Order });
-  if (t.Family && idx > 1) out.push({ rank: "family", name: t.Family });
-  const parts = (t.Scientific_name ?? "").split(/\s+/).filter(Boolean);
+  if (t.order && idx > 0) out.push({ rank: "order", name: t.order });
+  if (t.family && idx > 1) out.push({ rank: "family", name: t.family });
+  const parts = (t.sciName ?? "").split(/\s+/).filter(Boolean);
   if (parts[0] && idx > 2) out.push({ rank: "genus", name: parts[0] });
   if (parts.length >= 2 && idx > 3) {
     out.push({ rank: "species", name: parts.slice(0, 2).join(" ") });
@@ -49,59 +49,43 @@ export function DetailPanel({ taxon, version, onClose }: Props) {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const rank = taxon.Taxon_rank ?? "species";
+  const rank = taxon.rank ?? "species";
   const ancestry = buildLineage(taxon);
-  const iucn = taxon.IUCN_Red_List_Category as IucnCode | undefined;
+  const iucn = taxon.iucn as IucnCode | undefined;
   const info = iucn ? IUCN_INFO[iucn] : undefined;
-  const english =
-    taxon.English_name_AviList ??
-    taxon.English_name_Clements_v2024 ??
-    taxon.English_name_BirdLife_v9;
+  const english = taxon.name ?? taxon.nameClements ?? taxon.nameBirdLife;
 
   const altNames: { source: string; name: string }[] = [];
-  if (
-    taxon.English_name_Clements_v2024 &&
-    taxon.English_name_Clements_v2024 !== taxon.English_name_AviList
-  ) {
+  if (taxon.nameClements && taxon.nameClements !== taxon.name) {
     altNames.push({
       source: `Clements ${version.clementsVersion}`,
-      name: taxon.English_name_Clements_v2024,
+      name: taxon.nameClements,
     });
   }
-  if (
-    taxon.English_name_BirdLife_v9 &&
-    taxon.English_name_BirdLife_v9 !== taxon.English_name_AviList
-  ) {
+  if (taxon.nameBirdLife && taxon.nameBirdLife !== taxon.name) {
     altNames.push({
       source: `BirdLife ${version.birdLifeVersion}`,
-      name: taxon.English_name_BirdLife_v9,
+      name: taxon.nameBirdLife,
     });
   }
 
   const hasOriginal =
-    taxon.Authority ||
-    taxon.Protonym ||
-    taxon.Bibliographic_details ||
-    taxon.Title_of_original_description ||
-    taxon.Type_locality;
+    taxon.authority ||
+    taxon.protonym ||
+    taxon.citation ||
+    taxon.originalDescriptionTitle ||
+    taxon.typeLocality;
 
   const links: { label: string; href: string }[] = [];
-  if (taxon.Birds_of_the_World_URL)
-    links.push({
-      label: "Birds of the World",
-      href: taxon.Birds_of_the_World_URL,
-    });
-  if (taxon.BirdLife_DataZone_URL)
-    links.push({
-      label: "BirdLife DataZone",
-      href: taxon.BirdLife_DataZone_URL,
-    });
-  const aviUrl = avibaseUrl(taxon.AvibaseID);
+  if (taxon.bowUrl)
+    links.push({ label: "Birds of the World", href: taxon.bowUrl });
+  if (taxon.birdLifeUrl)
+    links.push({ label: "BirdLife DataZone", href: taxon.birdLifeUrl });
+  const aviUrl = avibaseUrl(taxon.avibaseId);
   if (aviUrl) links.push({ label: "AviBase", href: aviUrl });
 
   const hasGenusDetails =
-    rank === "genus" &&
-    (taxon.Type_species_of_genus || taxon.Gender_of_genus);
+    rank === "genus" && (taxon.typeSpecies || taxon.genusGender);
 
   return (
     <div
@@ -138,12 +122,12 @@ export function DetailPanel({ taxon, version, onClose }: Props) {
               {english}
             </h2>
             <div className="font-fraunces text-ink-2 mb-7 text-lg italic">
-              {taxon.Scientific_name}
+              {taxon.sciName}
             </div>
           </>
         ) : (
           <h2 className="font-fraunces mt-3.5 mb-7 text-[36px] italic leading-[1.1] tracking-[-0.01em]">
-            {taxon.Scientific_name}
+            {taxon.sciName}
           </h2>
         )}
 
@@ -171,17 +155,17 @@ export function DetailPanel({ taxon, version, onClose }: Props) {
                   {rank}
                 </span>
                 <span className="font-fraunces text-accent-2 text-sm font-semibold italic">
-                  {taxon.Scientific_name}
+                  {taxon.sciName}
                 </span>
               </li>
             </ol>
           </section>
 
-          {taxon.Range && (
+          {taxon.range && (
             <section className="bg-bg rounded-xl px-5 py-4">
               <div className={SECTION_LABEL}>Range</div>
               <p className="text-ink m-0 text-sm leading-relaxed">
-                {taxon.Range}
+                {taxon.range}
               </p>
             </section>
           )}
@@ -238,19 +222,19 @@ export function DetailPanel({ taxon, version, onClose }: Props) {
             <section className="bg-bg rounded-xl px-5 py-4">
               <div className={SECTION_LABEL}>Genus</div>
               <dl className="m-0 grid grid-cols-[110px_1fr] gap-x-4 gap-y-2">
-                {taxon.Type_species_of_genus && (
+                {taxon.typeSpecies && (
                   <>
                     <dt className={`m-0 pt-0.5 ${META_LABEL}`}>Type species</dt>
                     <dd className="font-fraunces text-ink m-0 text-sm italic">
-                      {taxon.Type_species_of_genus}
+                      {taxon.typeSpecies}
                     </dd>
                   </>
                 )}
-                {taxon.Gender_of_genus && (
+                {taxon.genusGender && (
                   <>
                     <dt className={`m-0 pt-0.5 ${META_LABEL}`}>Gender</dt>
                     <dd className="text-ink m-0 text-sm">
-                      {taxon.Gender_of_genus}
+                      {taxon.genusGender}
                     </dd>
                   </>
                 )}
@@ -262,77 +246,76 @@ export function DetailPanel({ taxon, version, onClose }: Props) {
             <section className="bg-bg rounded-xl px-5 py-4">
               <div className={SECTION_LABEL}>First described</div>
 
-              {(taxon.Protonym || taxon.Authority) && (
+              {(taxon.protonym || taxon.authority) && (
                 <div className="mb-4">
-                  {taxon.Protonym && (
+                  {taxon.protonym && (
                     <div className="font-fraunces text-ink text-lg italic leading-tight">
-                      {taxon.Protonym}
+                      {taxon.protonym}
                     </div>
                   )}
-                  {taxon.Authority && (
+                  {taxon.authority && (
                     <div className="text-ink-3 mt-1 text-xs">
-                      {taxon.Authority}
+                      {taxon.authority}
                     </div>
                   )}
                 </div>
               )}
 
-              {(taxon.Title_of_original_description ||
-                taxon.Bibliographic_details) && (
+              {(taxon.originalDescriptionTitle || taxon.citation) && (
                 <div className="mb-3.5">
-                  {taxon.Title_of_original_description && (
+                  {taxon.originalDescriptionTitle && (
                     <div className="text-ink text-sm leading-snug">
-                      {taxon.Original_description_URL ? (
+                      {taxon.originalDescriptionUrl ? (
                         <a
-                          href={taxon.Original_description_URL}
+                          href={taxon.originalDescriptionUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-ink border-rule hover:border-ink inline border-b no-underline"
                         >
-                          {taxon.Title_of_original_description}
+                          {taxon.originalDescriptionTitle}
                           <ExternalLink className="text-ink-3 ml-1 inline-block h-3 w-3 align-[-2px]" />
                         </a>
                       ) : (
-                        taxon.Title_of_original_description
+                        taxon.originalDescriptionTitle
                       )}
                     </div>
                   )}
-                  {taxon.Bibliographic_details && (
+                  {taxon.citation && (
                     <div className="text-ink-2 mt-1.5 text-xs leading-relaxed">
-                      {!taxon.Title_of_original_description &&
-                      taxon.Original_description_URL ? (
+                      {!taxon.originalDescriptionTitle &&
+                      taxon.originalDescriptionUrl ? (
                         <a
-                          href={taxon.Original_description_URL}
+                          href={taxon.originalDescriptionUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-ink-2 border-rule hover:border-ink-2 border-b no-underline"
                         >
-                          {taxon.Bibliographic_details}
+                          {taxon.citation}
                           <ExternalLink className="text-ink-3 ml-1 inline-block h-3 w-3 align-[-2px]" />
                         </a>
                       ) : (
-                        taxon.Bibliographic_details
+                        taxon.citation
                       )}
                     </div>
                   )}
                 </div>
               )}
 
-              {taxon.Type_locality && (
+              {taxon.typeLocality && (
                 <p className="text-ink-2 m-0 text-xs leading-relaxed">
                   <span className={`mr-1 ${META_LABEL}`}>Specimen from:</span>
-                  {taxon.Type_locality}
+                  {taxon.typeLocality}
                 </p>
               )}
             </section>
           )}
 
-          {taxon.Decision_summary && (
+          {taxon.decisionSummary && (
             <section className="bg-bg rounded-xl px-5 py-4">
               <div className={SECTION_LABEL}>Taxonomic notes</div>
               <div
                 className="prose-museum text-ink text-sm leading-[1.6]"
-                dangerouslySetInnerHTML={{ __html: taxon.Decision_summary }}
+                dangerouslySetInnerHTML={{ __html: taxon.decisionSummary }}
               />
             </section>
           )}

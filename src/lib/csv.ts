@@ -2,14 +2,14 @@ import type { Species } from "./data";
 import { COLUMNS, type Column } from "@/columns";
 
 const BASIC_FIELDS: Column[] = [
-  "Sequence",
-  "Taxon_rank",
-  "Order",
-  "Family",
-  "Family_English_name",
-  "Scientific_name",
-  "English_name_AviList",
-  "IUCN_Red_List_Category",
+  "sequence",
+  "rank",
+  "order",
+  "family",
+  "familyEn",
+  "sciName",
+  "name",
+  "iucn",
 ];
 
 export type CsvVariant = "basic" | "expanded";
