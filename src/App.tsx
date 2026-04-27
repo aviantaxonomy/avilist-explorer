@@ -57,13 +57,13 @@ export function App() {
   };
 
   return (
-    <div className="mu-root">
-      <header className="mu-header">
-        <div className="mu-brand">
+    <div className="bg-bg text-ink font-sans flex h-screen flex-col overflow-hidden">
+      <header className="bg-surface border-rule grid grid-cols-[auto_1fr] items-center gap-8 border-b px-8 py-[18px]">
+        <div className="flex items-center gap-6">
           <img
             src={logo}
             alt="AviList — The Global Avian Checklist"
-            className="mu-brand-logo"
+            className="block h-9 w-auto"
           />
           {manifest && editionId && (
             <EditionPicker
@@ -73,12 +73,12 @@ export function App() {
             />
           )}
         </div>
-        <div className="mu-header-right">
+        <div className="flex items-center gap-7 justify-self-end">
           <button
             type="button"
-            className="mu-download"
             disabled={!filtered}
             onClick={() => filtered && downloadCsv(filtered)}
+            className="bg-ink text-bg inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border-0 px-4 text-[13px] font-medium hover:bg-[#2c2c28] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <svg
               width="14"
@@ -96,12 +96,8 @@ export function App() {
         </div>
       </header>
 
-      {error && (
-        <div style={{ padding: "32px", color: "var(--accent-2)" }}>{error}</div>
-      )}
-      {!data && !error && (
-        <div style={{ padding: "32px", color: "var(--ink-3)" }}>Loading…</div>
-      )}
+      {error && <div className="text-accent-2 p-8">{error}</div>}
+      {!data && !error && <div className="text-ink-3 p-8">Loading…</div>}
 
       {data && facets && filtered && (
         <>

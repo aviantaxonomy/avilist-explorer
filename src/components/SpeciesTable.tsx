@@ -36,24 +36,29 @@ const iucnSort = (a: Row<Species>, b: Row<Species>, id: string) => {
 };
 
 function RankBadge({ rank }: { rank?: string }) {
-  if (!rank || !RANK_KEYS.has(rank)) return <span className="mu-empty">—</span>;
+  if (!rank || !RANK_KEYS.has(rank))
+    return <span className="text-ink-3">—</span>;
   return (
-    <span className={`mu-rank-badge mu-rank-badge-${rank}`}>{rank}</span>
+    <span
+      className={`font-sans inline-block min-w-[70px] rounded-[2px] border px-2 py-1 text-center text-[10px] font-semibold uppercase tracking-[0.1em] rank-badge-${rank}`}
+    >
+      {rank}
+    </span>
   );
 }
 
 function ScientificCell({ value }: { value?: string }) {
-  if (!value) return <span className="mu-empty">—</span>;
-  return <span className="mu-sci">{value}</span>;
+  if (!value) return <span className="text-ink-3">—</span>;
+  return <span className="font-fraunces text-sm italic">{value}</span>;
 }
 
 function IucnPill({ code }: { code?: string }) {
-  if (!code) return <span className="mu-empty">—</span>;
+  if (!code) return <span className="text-ink-3">—</span>;
   const info = IUCN_INFO[code as IucnCode];
   if (!info) return <span>{code}</span>;
   return (
     <span
-      className="mu-iucn"
+      className="font-mono inline-block rounded px-[9px] py-[3px] text-[11px] font-semibold tracking-wider"
       style={{ background: info.bg, color: info.fg }}
       title={info.label}
     >
@@ -64,7 +69,7 @@ function IucnPill({ code }: { code?: string }) {
 
 const renderText = (info: CellContext<Species, unknown>) => {
   const v = info.getValue() as string | undefined;
-  return v ?? <span className="mu-empty">—</span>;
+  return v ?? <span className="text-ink-3">—</span>;
 };
 
 const columns: ColumnDef<Species>[] = [
@@ -73,7 +78,11 @@ const columns: ColumnDef<Species>[] = [
     header: "#",
     size: 56,
     enableSorting: false,
-    cell: (ctx) => <span className="mu-num">{ctx.row.index + 1}</span>,
+    cell: (ctx) => (
+      <span className="font-mono text-ink-3 text-[11px] [font-variant-numeric:tabular-nums]">
+        {ctx.row.index + 1}
+      </span>
+    ),
   },
   {
     accessorKey: "Taxon_rank",
@@ -105,7 +114,11 @@ const columns: ColumnDef<Species>[] = [
     size: 200,
     cell: (ctx) => {
       const v = ctx.getValue() as string | undefined;
-      return v ? <span className="mu-en">{v}</span> : <span className="mu-empty">—</span>;
+      return v ? (
+        <span className="text-ink-2">{v}</span>
+      ) : (
+        <span className="text-ink-3">—</span>
+      );
     },
   },
   {
@@ -151,30 +164,42 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
   const totalWidth = headers.reduce((sum, h) => sum + h.column.getSize(), 0);
 
   return (
-    <div ref={scrollRef} className="mu-table-wrap">
+    <div ref={scrollRef} className="bg-surface relative flex-1 overflow-auto">
       <div
-        className="mu-table-head"
+        className="bg-warm border-rule sticky top-0 z-10 grid border-b"
         style={{ gridTemplateColumns: gridTemplate, minWidth: totalWidth }}
       >
         {headers.map((header) => {
           const canSort = header.column.getCanSort();
           const sorted = header.column.getIsSorted();
+          const isFirst = header === headers[0];
           return (
             <div
               key={header.id}
-              className={`mu-th ${canSort ? "is-sortable" : ""} ${sorted ? "is-active" : ""}`}
+              className={[
+                "flex items-center gap-1 truncate px-3 py-3 text-[11px] font-semibold uppercase tracking-wider select-none",
+                isFirst ? "pl-8" : "",
+                canSort ? "cursor-pointer" : "",
+                sorted ? "text-accent" : "text-ink-2",
+              ].join(" ")}
               onClick={
                 canSort ? header.column.getToggleSortingHandler() : undefined
               }
             >
-              <span className="mu-cell-truncate">
+              <span className="truncate">
                 {flexRender(
                   header.column.columnDef.header,
                   header.getContext(),
                 )}
               </span>
               {canSort && (
-                <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 10 10"
+                  aria-hidden="true"
+                  className={`shrink-0 ${sorted ? "text-accent" : "text-ink-3"}`}
+                >
                   {sorted === "asc" ? (
                     <path
                       d="M2 6l3-3 3 3"
@@ -204,7 +229,7 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
         })}
       </div>
       <div
-        className="mu-rows"
+        className="relative"
         style={{
           height: virtualizer.getTotalSize(),
           minWidth: totalWidth,
@@ -217,7 +242,12 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
           return (
             <div
               key={row.id}
-              className={`mu-row ${isSelected ? "is-selected" : ""}`}
+              className={[
+                "border-rule absolute inset-x-0 grid cursor-pointer border-b text-[13px] transition-colors hover:bg-[rgba(0,0,0,0.025)]",
+                isSelected
+                  ? "bg-selected [&>:first-child]:shadow-[inset_3px_0_0_var(--color-accent-2)]"
+                  : "",
+              ].join(" ")}
               style={{
                 gridTemplateColumns: gridTemplate,
                 transform: `translateY(${vRow.start}px)`,
@@ -225,13 +255,13 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
               }}
               onClick={() => onSelect(row.original)}
             >
-              {row.getVisibleCells().map((cell) => {
+              {row.getVisibleCells().map((cell, i) => {
                 const v = cell.getValue();
                 const title = typeof v === "string" ? v : undefined;
                 return (
                   <div
                     key={cell.id}
-                    className="mu-cell mu-cell-truncate"
+                    className={`flex items-center truncate px-3 ${i === 0 ? "pl-8" : ""}`}
                     title={title}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

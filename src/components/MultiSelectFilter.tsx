@@ -63,10 +63,15 @@ export function MultiSelectFilter({
       }}
     >
       <PopoverTrigger asChild>
-        <button type="button" className="mu-chip">
-          <span className="mu-chip-label">{label}</span>
+        <button
+          type="button"
+          className="border-rule bg-surface text-ink-2 hover:border-ink-3 relative inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-[13px] font-medium transition-colors"
+        >
+          <span>{label}</span>
           {selected.size > 0 && (
-            <span className="mu-chip-count">{selected.size}</span>
+            <span className="bg-ink text-bg inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1.5 text-[11px] font-semibold">
+              {selected.size}
+            </span>
           )}
           <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
             <path

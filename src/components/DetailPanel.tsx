@@ -33,6 +33,11 @@ function avibaseUrl(id?: string): string | null {
   return `https://avibase.bsc-eoc.org/species.jsp?avibaseid=${hash}`;
 }
 
+const SECTION_LABEL =
+  "text-ink-2 mb-3 text-xs font-semibold uppercase tracking-[0.1em]";
+const META_LABEL =
+  "text-ink-3 text-[11px] font-semibold uppercase tracking-wider";
+
 export function DetailPanel({ taxon, onClose }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -97,15 +102,25 @@ export function DetailPanel({ taxon, onClose }: Props) {
     (taxon.Type_species_of_genus || taxon.Gender_of_genus);
 
   return (
-    <div className="mu-panel-backdrop" onClick={onClose}>
-      <aside className="mu-panel" onClick={(e) => e.stopPropagation()}>
-        <div className="mu-panel-head">
+    <div
+      className="fixed inset-0 z-50 flex justify-end bg-[rgba(14,14,12,0.3)]"
+      onClick={onClose}
+    >
+      <aside
+        className="bg-surface text-ink font-sans h-full w-[480px] overflow-y-auto px-7 pt-6 pb-9 shadow-[-10px_0_40px_rgba(0,0,0,0.1)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
           <span
-            className={`mu-rank-badge mu-rank-badge-${rank} mu-rank-badge-detail`}
+            className={`font-sans inline-block min-w-[70px] rounded-[2px] border px-2.5 py-[5px] text-center text-[11px] font-semibold uppercase tracking-[0.1em] rank-badge-${rank}`}
           >
             {rank}
           </span>
-          <button className="mu-close" onClick={onClose} aria-label="Close">
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="bg-bg text-ink-2 hover:bg-rule grid h-8 w-8 cursor-pointer place-items-center rounded-full border-0"
+          >
             <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
               <path
                 d="M3 3l10 10M13 3L3 13"
@@ -117,52 +132,69 @@ export function DetailPanel({ taxon, onClose }: Props) {
         </div>
         {english ? (
           <>
-            <h2 className="mu-panel-en-heading">{english}</h2>
-            <div className="mu-panel-sci-secondary">
+            <h2 className="mt-3.5 mb-1.5 text-[32px] font-medium leading-[1.1] tracking-[-0.01em]">
+              {english}
+            </h2>
+            <div className="font-fraunces text-ink-2 mb-7 text-lg italic">
               {taxon.Scientific_name}
             </div>
           </>
         ) : (
-          <h2 className="mu-panel-sci">{taxon.Scientific_name}</h2>
+          <h2 className="font-fraunces mt-3.5 mb-7 text-[36px] italic leading-[1.1] tracking-[-0.01em]">
+            {taxon.Scientific_name}
+          </h2>
         )}
 
-        <div className="mu-panel-grid">
-          <section className="mu-panel-section">
-            <div className="mu-section-label">Lineage</div>
-            <ol className="mu-anc">
+        <div className="flex flex-col gap-6">
+          <section className="bg-bg rounded-xl px-5 py-4">
+            <div className={SECTION_LABEL}>Lineage</div>
+            <ol className="m-0 list-none p-0">
               {ancestry.map((a, i) => (
-                <li key={`${a.rank}-${i}`} style={{ paddingLeft: i * 16 }}>
-                  <span className="mu-anc-rank">{a.rank}</span>
-                  <span className="mu-anc-name">{a.name}</span>
+                <li
+                  key={`${a.rank}-${i}`}
+                  className="flex items-baseline gap-3 py-1.5"
+                  style={{ paddingLeft: i * 16 }}
+                >
+                  <span className="text-ink-3 w-[70px] flex-shrink-0 text-[10px] font-semibold uppercase tracking-wider">
+                    {a.rank}
+                  </span>
+                  <span className="font-fraunces text-sm italic">{a.name}</span>
                 </li>
               ))}
               <li
-                className="is-current"
+                className="flex items-baseline gap-3 py-1.5"
                 style={{ paddingLeft: ancestry.length * 16 }}
               >
-                <span className="mu-anc-rank">{rank}</span>
-                <span className="mu-anc-name">{taxon.Scientific_name}</span>
+                <span className="text-ink-3 w-[70px] flex-shrink-0 text-[10px] font-semibold uppercase tracking-wider">
+                  {rank}
+                </span>
+                <span className="font-fraunces text-accent-2 text-sm font-semibold italic">
+                  {taxon.Scientific_name}
+                </span>
               </li>
             </ol>
           </section>
 
           {taxon.Range && (
-            <section className="mu-panel-section">
-              <div className="mu-section-label">Range</div>
-              <p className="mu-range">{taxon.Range}</p>
+            <section className="bg-bg rounded-xl px-5 py-4">
+              <div className={SECTION_LABEL}>Range</div>
+              <p className="text-ink m-0 text-sm leading-relaxed">
+                {taxon.Range}
+              </p>
             </section>
           )}
 
           {iucn && info && (
-            <section className="mu-panel-section">
-              <div className="mu-section-label">Conservation Status</div>
-              <div className="mu-cons-bar">
+            <section className="bg-bg rounded-xl px-5 py-4">
+              <div className={SECTION_LABEL}>Conservation Status</div>
+              <div className="mb-3 flex gap-[3px]">
                 {IUCN_BAR_ORDER.map((c) => {
                   const ci = IUCN_INFO[c];
+                  const active = c === iucn;
                   return (
                     <div
                       key={c}
-                      className={`mu-cons-step ${c === iucn ? "is-current" : ""}`}
+                      className={`font-mono flex-1 rounded py-2 text-center text-[11px] font-semibold transition-opacity ${active ? "scale-[1.08] opacity-100 shadow-[0_2px_8px_rgba(0,0,0,0.15)]" : "opacity-40"}`}
                       style={{ background: ci.bg, color: ci.fg }}
                     >
                       {c}
@@ -170,24 +202,30 @@ export function DetailPanel({ taxon, onClose }: Props) {
                   );
                 })}
               </div>
-              <div className="mu-cons-label">
-                <span className="mu-cons-dot" style={{ background: info.bg }} />
+              <div className="font-fraunces text-ink flex items-center gap-2.5 text-lg font-medium italic">
+                <span
+                  className="inline-block h-3 w-3 flex-shrink-0 rounded-full border border-[rgba(0,0,0,0.1)]"
+                  style={{ background: info.bg }}
+                />
                 {info.label}
               </div>
-              <div className="mu-cons-meta">
+              <div className="text-ink-3 mt-1 text-xs">
                 IUCN Red List · {iucn} ({info.label})
               </div>
             </section>
           )}
 
           {altNames.length > 0 && (
-            <section className="mu-panel-section">
-              <div className="mu-section-label">Other names</div>
-              <dl className="mu-alt-names">
+            <section className="bg-bg rounded-xl px-5 py-4">
+              <div className={SECTION_LABEL}>Other names</div>
+              <dl className="m-0 flex flex-col gap-2">
                 {altNames.map((n) => (
-                  <div key={n.source} className="mu-alt-row">
-                    <dt>{n.source}</dt>
-                    <dd>{n.name}</dd>
+                  <div
+                    key={n.source}
+                    className="grid grid-cols-[110px_1fr] items-baseline gap-4"
+                  >
+                    <dt className={`m-0 ${META_LABEL}`}>{n.source}</dt>
+                    <dd className="text-ink m-0 text-sm">{n.name}</dd>
                   </div>
                 ))}
               </dl>
@@ -195,19 +233,23 @@ export function DetailPanel({ taxon, onClose }: Props) {
           )}
 
           {hasGenusDetails && (
-            <section className="mu-panel-section">
-              <div className="mu-section-label">Genus</div>
-              <dl className="mu-refs">
+            <section className="bg-bg rounded-xl px-5 py-4">
+              <div className={SECTION_LABEL}>Genus</div>
+              <dl className="m-0 grid grid-cols-[110px_1fr] gap-x-4 gap-y-2">
                 {taxon.Type_species_of_genus && (
                   <>
-                    <dt>Type species</dt>
-                    <dd className="mu-sci">{taxon.Type_species_of_genus}</dd>
+                    <dt className={`m-0 pt-0.5 ${META_LABEL}`}>Type species</dt>
+                    <dd className="font-fraunces text-ink m-0 text-sm italic">
+                      {taxon.Type_species_of_genus}
+                    </dd>
                   </>
                 )}
                 {taxon.Gender_of_genus && (
                   <>
-                    <dt>Gender</dt>
-                    <dd>{taxon.Gender_of_genus}</dd>
+                    <dt className={`m-0 pt-0.5 ${META_LABEL}`}>Gender</dt>
+                    <dd className="text-ink m-0 text-sm">
+                      {taxon.Gender_of_genus}
+                    </dd>
                   </>
                 )}
               </dl>
@@ -215,33 +257,38 @@ export function DetailPanel({ taxon, onClose }: Props) {
           )}
 
           {hasOriginal && (
-            <section className="mu-panel-section">
-              <div className="mu-section-label">First described</div>
+            <section className="bg-bg rounded-xl px-5 py-4">
+              <div className={SECTION_LABEL}>First described</div>
 
               {(taxon.Protonym || taxon.Authority) && (
-                <div className="mu-orig-head">
+                <div className="mb-4">
                   {taxon.Protonym && (
-                    <div className="mu-orig-protonym">{taxon.Protonym}</div>
+                    <div className="font-fraunces text-ink text-lg italic leading-tight">
+                      {taxon.Protonym}
+                    </div>
                   )}
                   {taxon.Authority && (
-                    <div className="mu-orig-authority">{taxon.Authority}</div>
+                    <div className="text-ink-3 mt-1 text-xs">
+                      {taxon.Authority}
+                    </div>
                   )}
                 </div>
               )}
 
               {(taxon.Title_of_original_description ||
                 taxon.Bibliographic_details) && (
-                <div className="mu-orig-pub">
+                <div className="mb-3.5">
                   {taxon.Title_of_original_description && (
-                    <div className="mu-orig-title">
+                    <div className="text-ink text-sm leading-snug">
                       {taxon.Original_description_URL ? (
                         <a
                           href={taxon.Original_description_URL}
                           target="_blank"
                           rel="noopener noreferrer"
+                          className="text-ink border-rule hover:border-ink inline border-b no-underline"
                         >
                           {taxon.Title_of_original_description}
-                          <ExternalLink className="mu-link-icon" />
+                          <ExternalLink className="text-ink-3 ml-1 inline-block h-3 w-3 align-[-2px]" />
                         </a>
                       ) : (
                         taxon.Title_of_original_description
@@ -249,16 +296,17 @@ export function DetailPanel({ taxon, onClose }: Props) {
                     </div>
                   )}
                   {taxon.Bibliographic_details && (
-                    <div className="mu-orig-cite">
+                    <div className="text-ink-2 mt-1.5 text-xs leading-relaxed">
                       {!taxon.Title_of_original_description &&
                       taxon.Original_description_URL ? (
                         <a
                           href={taxon.Original_description_URL}
                           target="_blank"
                           rel="noopener noreferrer"
+                          className="text-ink-2 border-rule hover:border-ink-2 border-b no-underline"
                         >
                           {taxon.Bibliographic_details}
-                          <ExternalLink className="mu-link-icon" />
+                          <ExternalLink className="text-ink-3 ml-1 inline-block h-3 w-3 align-[-2px]" />
                         </a>
                       ) : (
                         taxon.Bibliographic_details
@@ -269,8 +317,8 @@ export function DetailPanel({ taxon, onClose }: Props) {
               )}
 
               {taxon.Type_locality && (
-                <p className="mu-orig-typeloc">
-                  <span className="mu-orig-typeloc-label">Specimen from:</span>{" "}
+                <p className="text-ink-2 m-0 text-xs leading-relaxed">
+                  <span className={`mr-1 ${META_LABEL}`}>Specimen from:</span>
                   {taxon.Type_locality}
                 </p>
               )}
@@ -278,24 +326,29 @@ export function DetailPanel({ taxon, onClose }: Props) {
           )}
 
           {taxon.Decision_summary && (
-            <section className="mu-panel-section">
-              <div className="mu-section-label">Taxonomic notes</div>
+            <section className="bg-bg rounded-xl px-5 py-4">
+              <div className={SECTION_LABEL}>Taxonomic notes</div>
               <div
-                className="mu-prose"
+                className="prose-museum text-ink text-sm leading-[1.6]"
                 dangerouslySetInnerHTML={{ __html: taxon.Decision_summary }}
               />
             </section>
           )}
 
           {links.length > 0 && (
-            <section className="mu-panel-section">
-              <div className="mu-section-label">External resources</div>
-              <ul className="mu-resources">
+            <section className="bg-bg rounded-xl px-5 py-4">
+              <div className={SECTION_LABEL}>External resources</div>
+              <ul className="m-0 flex list-none flex-col gap-0.5 p-0">
                 {links.map((l) => (
                   <li key={l.href}>
-                    <a href={l.href} target="_blank" rel="noopener noreferrer">
+                    <a
+                      href={l.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-ink hover:bg-surface -mx-2.5 flex items-center justify-between rounded px-2.5 py-2 text-sm no-underline"
+                    >
                       <span>{l.label}</span>
-                      <ExternalLink className="mu-link-icon" />
+                      <ExternalLink className="text-ink-3 h-3 w-3" />
                     </a>
                   </li>
                 ))}

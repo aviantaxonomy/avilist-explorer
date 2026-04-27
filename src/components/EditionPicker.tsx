@@ -27,9 +27,18 @@ export function EditionPicker({ editions, current, onChange }: Props) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className="mu-version-btn" type="button">
+        <button
+          type="button"
+          className="border-rule bg-surface font-fraunces text-ink hover:border-ink-3 inline-flex h-8 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-medium"
+        >
           {label}
-          <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+          <svg
+            width="10"
+            height="10"
+            viewBox="0 0 10 10"
+            aria-hidden="true"
+            className="text-ink-3"
+          >
             <path
               d="M2 4l3 3 3-3"
               stroke="currentColor"

@@ -27,8 +27,8 @@ export function FilterBar({ filters, facets, onChange, resultsLabel }: Props) {
   };
 
   return (
-    <div className="mu-toolbar">
-      <label className="mu-search">
+    <div className="bg-surface border-rule flex flex-wrap items-center gap-4 border-b px-8 py-[18px]">
+      <label className="border-rule bg-bg text-ink-3 hover:border-ink-3 focus-within:border-ink-3 flex h-10 min-w-[320px] flex-1 items-center gap-2.5 rounded-full border px-3.5 transition-colors max-w-[520px]">
         <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
           <circle
             cx="11"
@@ -53,10 +53,11 @@ export function FilterBar({ filters, facets, onChange, resultsLabel }: Props) {
           onChange={(e) => update("search", e.target.value)}
           placeholder="Search by scientific or English name…"
           spellCheck={false}
+          className="text-ink placeholder:text-ink-3 flex-1 border-0 bg-transparent text-sm outline-0"
         />
       </label>
 
-      <div className="mu-chips">
+      <div className="flex flex-wrap items-center gap-2">
         <MultiSelectFilter
           label="Rank"
           options={[...RANK_OPTIONS]}
@@ -109,13 +110,18 @@ export function FilterBar({ filters, facets, onChange, resultsLabel }: Props) {
         />
 
         {isFilterActive(filters) && (
-          <button className="mu-clear" onClick={() => onChange(emptyFilters)}>
+          <button
+            onClick={() => onChange(emptyFilters)}
+            className="text-accent-2 cursor-pointer border-0 bg-transparent px-1 text-[13px] font-medium underline underline-offset-4"
+          >
             Clear all
           </button>
         )}
       </div>
 
-      <div className="mu-result-count">{resultsLabel}</div>
+      <div className="text-ink-3 ml-auto text-xs [&_b]:text-ink [&_b]:font-semibold">
+        {resultsLabel}
+      </div>
     </div>
   );
 }
