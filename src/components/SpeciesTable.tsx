@@ -12,7 +12,7 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { FileText } from "lucide-react";
 import type { Species } from "@/lib/data";
-import { IUCN_INFO, type IucnCode } from "@/lib/iucn";
+import { baseIucnCode, IUCN_INFO } from "@/lib/iucn";
 
 const ROW_HEIGHT = 48;
 
@@ -31,8 +31,10 @@ const IUCN_SEVERITY: Record<string, number> = {
 };
 
 const iucnSort = (a: Row<Species>, b: Row<Species>, id: string) => {
-  const av = IUCN_SEVERITY[(a.getValue(id) as string) ?? ""] ?? 99;
-  const bv = IUCN_SEVERITY[(b.getValue(id) as string) ?? ""] ?? 99;
+  const av =
+    IUCN_SEVERITY[baseIucnCode(a.getValue(id) as string) ?? ""] ?? 99;
+  const bv =
+    IUCN_SEVERITY[baseIucnCode(b.getValue(id) as string) ?? ""] ?? 99;
   return av - bv;
 };
 
@@ -74,15 +76,16 @@ function ScientificCell({ value, rank }: { value?: string; rank?: string }) {
 
 function IucnPill({ code }: { code?: string }) {
   if (!code) return null;
-  const info = IUCN_INFO[code as IucnCode];
-  if (!info) return <span>{code}</span>;
+  const base = baseIucnCode(code);
+  const info = base ? IUCN_INFO[base] : undefined;
+  if (!base || !info) return <span>{code}</span>;
   return (
     <span
       className="font-mono inline-block rounded px-[9px] py-[3px] text-[11px] font-semibold tracking-wider"
       style={{ background: info.bg, color: info.fg }}
-      title={info.label}
+      title={code !== base ? `${code} — ${info.label}` : info.label}
     >
-      {code}
+      {base}
     </span>
   );
 }
@@ -204,6 +207,9 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    defaultColumn: {
+      sortUndefined: "last",
+    },
   });
 
   const rows = table.getRowModel().rows;

@@ -33,3 +33,30 @@ export const IUCN_BAR_ORDER: IucnCode[] = [
   "EW",
   "EX",
 ];
+
+/**
+ * Strip parenthetical qualifiers from an IUCN value.
+ * "CR (PE)" → "CR", "EN" → "EN". Returns undefined if the prefix isn't a
+ * known IUCN code.
+ */
+export function baseIucnCode(raw?: string): IucnCode | undefined {
+  if (!raw) return undefined;
+  const prefix = raw.trim().split(/[\s(]/)[0].toUpperCase();
+  return prefix in IUCN_INFO ? (prefix as IucnCode) : undefined;
+}
+
+const QUALIFIER_LABELS: Record<string, string> = {
+  PE: "possibly extinct",
+  PEW: "possibly extinct in the wild",
+};
+
+/**
+ * Pull a humanized qualifier from an IUCN value.
+ * "CR (PE)" → "possibly extinct". Unknown qualifiers fall through verbatim.
+ */
+export function iucnQualifier(raw?: string): string | undefined {
+  if (!raw) return undefined;
+  const match = raw.match(/\(([^)]+)\)/);
+  if (!match) return undefined;
+  return QUALIFIER_LABELS[match[1].toUpperCase()] ?? match[1];
+}

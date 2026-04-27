@@ -1,4 +1,5 @@
 import type { Species } from "./data";
+import { baseIucnCode } from "./iucn";
 
 export const RANK_OPTIONS = [
   "order",
@@ -90,7 +91,10 @@ export function applyFilters(data: Species[], f: FilterState): Species[] {
   const result: Species[] = [];
   for (const row of data) {
     if (f.ranks.size > 0 && (!row.rank || !f.ranks.has(row.rank))) continue;
-    if (f.iucn.size > 0 && (!row.iucn || !f.iucn.has(row.iucn))) continue;
+    if (f.iucn.size > 0) {
+      const base = baseIucnCode(row.iucn);
+      if (!base || !f.iucn.has(base)) continue;
+    }
     if (f.orders.size > 0 && (!row.order || !f.orders.has(row.order)))
       continue;
     if (f.families.size > 0 && (!row.family || !f.families.has(row.family)))

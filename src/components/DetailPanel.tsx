@@ -1,7 +1,12 @@
 import { useEffect } from "react";
 import { ExternalLink } from "lucide-react";
 import type { Species } from "@/lib/data";
-import { IUCN_BAR_ORDER, IUCN_INFO, type IucnCode } from "@/lib/iucn";
+import {
+  baseIucnCode,
+  iucnQualifier,
+  IUCN_BAR_ORDER,
+  IUCN_INFO,
+} from "@/lib/iucn";
 import {
   formatProposalNumber,
   parseProposalNumbers,
@@ -67,8 +72,12 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
 
   const rank = taxon.rank ?? "species";
   const ancestry = buildLineage(taxon);
-  const iucn = taxon.iucn as IucnCode | undefined;
+  const iucnRaw = taxon.iucn;
+  const iucn = baseIucnCode(iucnRaw);
   const info = iucn ? IUCN_INFO[iucn] : undefined;
+  const qualifier = iucnQualifier(iucnRaw);
+  const iucnLabel =
+    info && qualifier ? `${info.label} (${qualifier})` : info?.label;
   const english = taxon.name ?? taxon.nameClements ?? taxon.nameBirdLife;
 
   const altNames: { source: string; name: string }[] = [];
@@ -241,11 +250,9 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
                   className="inline-block h-3 w-3 flex-shrink-0 rounded-full border border-[rgba(0,0,0,0.1)]"
                   style={{ background: info.bg }}
                 />
-                {info.label}
+                {iucnLabel}
               </div>
-              <div className="text-ink-3 mt-1 text-xs">
-                IUCN Red List · {iucn} ({info.label})
-              </div>
+              <div className="text-ink-3 mt-1 text-xs">IUCN Red List</div>
             </section>
           )}
 
