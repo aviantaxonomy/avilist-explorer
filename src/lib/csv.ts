@@ -52,7 +52,10 @@ export function downloadCsv(
   for (const t of rows) {
     lines.push(fields.map((f) => escape(t[f])).join(","));
   }
-  const blob = new Blob([lines.join("\n")], {
+  // Prepend UTF-8 BOM so Excel auto-detects the encoding. Without it,
+  // Windows Excel falls back to its default codepage and mangles accented
+  // characters in scientific names, type localities, and citations.
+  const blob = new Blob(["﻿" + lines.join("\n")], {
     type: "text/csv;charset=utf-8",
   });
   const url = URL.createObjectURL(blob);
