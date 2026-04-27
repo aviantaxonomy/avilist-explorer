@@ -37,8 +37,7 @@ const iucnSort = (a: Row<Species>, b: Row<Species>, id: string) => {
 };
 
 function RankBadge({ rank }: { rank?: string }) {
-  if (!rank || !RANK_KEYS.has(rank))
-    return <span className="text-ink-3">—</span>;
+  if (!rank || !RANK_KEYS.has(rank)) return null;
   return (
     <span
       className={`font-sans inline-block min-w-[70px] rounded-[2px] border px-2 py-1 text-center text-[10px] font-semibold uppercase tracking-[0.1em] rank-badge-${rank}`}
@@ -49,7 +48,7 @@ function RankBadge({ rank }: { rank?: string }) {
 }
 
 function ScientificCell({ value, rank }: { value?: string; rank?: string }) {
-  if (!value) return <span className="text-ink-3">—</span>;
+  if (!value) return null;
   const italic = rank === "species" || rank === "subspecies";
   return (
     <span className={`font-fraunces text-sm ${italic ? "italic" : ""}`}>
@@ -59,7 +58,7 @@ function ScientificCell({ value, rank }: { value?: string; rank?: string }) {
 }
 
 function IucnPill({ code }: { code?: string }) {
-  if (!code) return <span className="text-ink-3">—</span>;
+  if (!code) return null;
   const info = IUCN_INFO[code as IucnCode];
   if (!info) return <span>{code}</span>;
   return (
@@ -74,8 +73,7 @@ function IucnPill({ code }: { code?: string }) {
 }
 
 const renderText = (info: CellContext<Species, unknown>) => {
-  const v = info.getValue() as string | undefined;
-  return v ?? <span className="text-ink-3">—</span>;
+  return (info.getValue() as string | undefined) ?? null;
 };
 
 type Props = {
@@ -93,7 +91,7 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
       {
         id: "index",
         header: "#",
-        size: 56,
+        size: 73,
         enableSorting: false,
         cell: (ctx) => (
           <span className="font-mono text-ink-3 text-[11px] [font-variant-numeric:tabular-nums]">
@@ -136,11 +134,7 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
         size: 200,
         cell: (ctx) => {
           const v = ctx.getValue() as string | undefined;
-          return v ? (
-            <span className="text-ink-2">{v}</span>
-          ) : (
-            <span className="text-ink-3">—</span>
-          );
+          return v ? <span className="text-ink-2">{v}</span> : null;
         },
       },
       {
@@ -230,7 +224,7 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
               key={header.id}
               className={[
                 "flex items-center gap-1 truncate px-3 py-3 text-[11px] font-semibold uppercase tracking-wider select-none",
-                isFirst ? "pl-8" : "",
+                isFirst ? "pl-6" : "",
                 canSort ? "cursor-pointer" : "",
                 sorted ? "text-accent" : "text-ink-2",
               ].join(" ")}
@@ -313,7 +307,7 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
                 return (
                   <div
                     key={cell.id}
-                    className={`flex items-center truncate px-3 ${i === 0 ? "pl-8" : ""}`}
+                    className={`flex items-center truncate px-3 ${i === 0 ? "pl-6" : ""}`}
                     title={title}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
