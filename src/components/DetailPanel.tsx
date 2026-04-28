@@ -107,7 +107,7 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
   if (taxon.birdLifeUrl)
     links.push({ label: "BirdLife DataZone", href: taxon.birdLifeUrl });
   const aviUrl = avibaseUrl(taxon.avibaseId);
-  if (aviUrl) links.push({ label: "AviBase", href: aviUrl });
+  if (aviUrl) links.push({ label: "Avibase", href: aviUrl });
 
   const hasGenusDetails =
     rank === "genus" && (taxon.typeSpecies || taxon.genusGender);

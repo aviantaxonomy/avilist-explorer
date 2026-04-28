@@ -52,6 +52,18 @@ const rankSort = (a: Row<Species>, b: Row<Species>, id: string) => {
   return av - bv;
 };
 
+const RANK_ROW_BG: Record<string, string> = {
+  order: "bg-[#dbe1cd] hover:bg-[#cbd5b8]",
+  family: "bg-[#e0d2b4] hover:bg-[#d0c19c]",
+  genus: "bg-[#f3e3c5] hover:bg-[#ead4a8]",
+  species: "bg-warm/60 hover:bg-warm/85",
+  subspecies: "opacity-60 hover:bg-[rgba(0,0,0,0.025)]",
+};
+
+function rankRowClass(rank?: string): string {
+  return RANK_ROW_BG[rank ?? ""] ?? "hover:bg-[rgba(0,0,0,0.025)]";
+}
+
 function RankBadge({ rank }: { rank?: string }) {
   if (!rank || !RANK_KEYS.has(rank)) return null;
   return (
@@ -162,7 +174,7 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
           return (
             <button
               type="button"
-              className="text-ink-3 hover:text-ink inline-flex cursor-pointer items-center gap-1 text-[12px] font-medium"
+              className="text-ink-2 hover:text-ink inline-flex cursor-pointer items-center gap-1 text-[12px] font-medium"
               title="View decision summary"
               onClick={(e) => {
                 e.stopPropagation();
@@ -190,7 +202,7 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
         cell: () => (
           <button
             type="button"
-            className="text-ink-3 hover:text-ink cursor-pointer text-[12px] font-medium underline underline-offset-2"
+            className="text-ink-2 hover:text-ink cursor-pointer text-[12px] font-medium underline underline-offset-2"
           >
             Details
           </button>
@@ -308,10 +320,7 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
               key={row.id}
               className={[
                 "border-rule absolute inset-x-0 grid cursor-pointer border-b text-[13px] transition-colors",
-                rowRank === "species"
-                  ? "bg-warm/60 hover:bg-warm/85"
-                  : "hover:bg-[rgba(0,0,0,0.025)]",
-                rowRank === "subspecies" ? "opacity-60" : "",
+                rankRowClass(rowRank),
                 isSelected
                   ? "bg-selected [&>:first-child]:shadow-[inset_3px_0_0_var(--color-accent-2)]"
                   : "",
