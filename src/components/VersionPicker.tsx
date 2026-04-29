@@ -29,7 +29,7 @@ export function VersionPicker({ versions, current, onChange }: Props) {
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="border-rule bg-surface font-fraunces text-ink hover:border-ink-3 inline-flex h-8 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-medium"
+          className="border-rule bg-surface text-ink hover:border-ink-3 inline-flex h-8 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-medium"
         >
           {label}
           <svg

@@ -146,18 +146,30 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
             <h2 className="mt-3.5 mb-1.5 text-[32px] font-medium leading-[1.1] tracking-[-0.01em]">
               {english}
             </h2>
-            <div
-              className={`font-fraunces text-ink-2 mb-7 text-lg ${isItalicRank(rank) ? "italic" : ""}`}
-            >
-              {taxon.sciName}
+            <div className="text-ink-2 mb-7 text-lg">
+              <span
+                className={`font-fraunces ${isItalicRank(rank) ? "italic" : ""}`}
+              >
+                {taxon.sciName}
+              </span>
+              {taxon.authority && (
+                <span className="text-ink-3 ml-2 text-sm">
+                  {taxon.authority}
+                </span>
+              )}
             </div>
           </>
         ) : (
-          <h2
-            className={`font-fraunces mt-3.5 mb-7 text-[36px] leading-[1.1] tracking-[-0.01em] ${isItalicRank(rank) ? "italic" : ""}`}
-          >
-            {taxon.sciName}
-          </h2>
+          <div className="mt-3.5 mb-7">
+            <h2
+              className={`font-fraunces text-[36px] leading-[1.1] tracking-[-0.01em] ${isItalicRank(rank) ? "italic" : ""}`}
+            >
+              {taxon.sciName}
+            </h2>
+            {taxon.authority && (
+              <div className="text-ink-3 mt-1 text-sm">{taxon.authority}</div>
+            )}
+          </div>
         )}
 
         <div className="flex flex-col gap-6">
@@ -312,7 +324,9 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
                   )}
                   {taxon.authority && (
                     <div className="text-ink-3 mt-1 text-xs">
-                      {taxon.authority}
+                      {/* Brackets only apply to names AFTER the protonym
+                          (combinatio nova) — never to the original. */}
+                      {taxon.authority.replace(/^\((.*)\)$/, "$1")}
                     </div>
                   )}
                 </div>
@@ -360,7 +374,9 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
 
               {taxon.typeLocality && (
                 <p className="text-ink-2 m-0 text-xs leading-relaxed">
-                  <span className={`mr-1 ${META_LABEL}`}>Specimen from:</span>
+                  <span className={`mr-1 ${META_LABEL}`}>
+                    Type specimen(s) from:
+                  </span>
                   {taxon.typeLocality}
                 </p>
               )}

@@ -64,9 +64,11 @@ body[data-rankpalette="ornitho"] .rank-badge-subspecies {
   color: var(--color-ink) !important;
 }
 
-/* === HTML prose rendering for Decision_summary (output is generated, not authored as JSX) === */
+/* === HTML prose rendering for Decision_summary (output is generated, not authored as JSX) ===
+   `em` uses the body's native italic (Inter italic) rather than swapping in
+   Fraunces — keeps x-height and word spacing consistent so italicised Latin
+   names don't crash into adjacent words. */
 .prose-museum em {
-  font-family: var(--font-fraunces);
   font-style: italic;
 }
 .prose-museum strong {
