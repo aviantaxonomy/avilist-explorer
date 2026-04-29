@@ -6,19 +6,8 @@ import { DetailPanel } from "@/components/DetailPanel";
 import { VersionPicker } from "@/components/VersionPicker";
 import { DownloadDialog } from "@/components/DownloadDialog";
 import { loadSpecies, type Species } from "@/lib/data";
-import {
-  applyFilters,
-  computeFacets,
-  emptyFilters,
-  isFilterActive,
-  type FilterState,
-} from "@/lib/filters";
-import {
-  dataPathFor,
-  defaultVersion,
-  loadVersions,
-  type VersionsManifest,
-} from "@/lib/versions";
+import { applyFilters, computeFacets, emptyFilters, isFilterActive, type FilterState } from "@/lib/filters";
+import { dataPathFor, defaultVersion, loadVersions, type VersionsManifest } from "@/lib/versions";
 import logo from "@/assets/logo.webp";
 
 const STORAGE_KEY = "avilist:version";
@@ -49,9 +38,9 @@ export function App() {
         setManifest(m);
         const stored = localStorage.getItem(STORAGE_KEY);
         const valid = stored && m.versions.some((v) => v.id === stored);
-        setVersionId(valid ? stored : (defaultVersion(m)?.id ?? null));
+        setVersionId(valid ? stored : defaultVersion(m)?.id ?? null);
       },
-      (e) => setError(String(e)),
+      (e) => setError(String(e))
     );
   }, []);
 
@@ -64,22 +53,15 @@ export function App() {
     if (!currentVersion) return;
     setData(null);
     setSelected(null);
-    loadSpecies(dataPathFor(currentVersion)).then(setData, (e) =>
-      setError(String(e)),
-    );
+    loadSpecies(dataPathFor(currentVersion)).then(setData, (e) => setError(String(e)));
   }, [currentVersion]);
 
   useEffect(() => {
-    document.title = currentVersion
-      ? `AviList ${currentVersion.label}`
-      : "AviList Explorer";
+    document.title = currentVersion ? `AviList ${currentVersion.label}` : "AviList";
   }, [currentVersion]);
 
   const facets = useMemo(() => (data ? computeFacets(data) : null), [data]);
-  const filtered = useMemo(
-    () => (data ? applyFilters(data, filters) : null),
-    [data, filters],
-  );
+  const filtered = useMemo(() => (data ? applyFilters(data, filters) : null), [data, filters]);
 
   const handleVersionChange = (id: string) => {
     localStorage.setItem(STORAGE_KEY, id);
@@ -89,23 +71,12 @@ export function App() {
   return (
     <div className="bg-bg text-ink font-sans flex h-screen flex-col overflow-hidden">
       <header className="bg-surface border-rule flex items-center gap-4 border-b px-4 py-[18px] sm:gap-6 sm:px-8">
-        <a
-          href="https://avilist.org/"
-          aria-label="AviList — The Global Avian Checklist"
-        >
-          <img
-            src={logo}
-            alt="AviList — The Global Avian Checklist"
-            className="block h-9 w-auto"
-          />
+        <a href="https://avilist.org/" aria-label="AviList — The Global Avian Checklist">
+          <img src={logo} alt="AviList — The Global Avian Checklist" className="block h-9 w-auto" />
         </a>
         {manifest && versionId && (
           <div className="ml-auto sm:ml-0">
-            <VersionPicker
-              versions={manifest.versions}
-              current={versionId}
-              onChange={handleVersionChange}
-            />
+            <VersionPicker versions={manifest.versions} current={versionId} onChange={handleVersionChange} />
           </div>
         )}
         <div className="hidden sm:ml-auto sm:flex">
@@ -165,21 +136,12 @@ export function App() {
               </>
             }
           />
-          <SpeciesTable
-            data={filtered}
-            selected={selected}
-            onSelect={handleSelect}
-          />
+          <SpeciesTable data={filtered} selected={selected} onSelect={handleSelect} />
         </>
       )}
 
       {selected && currentVersion && (
-        <DetailPanel
-          taxon={selected}
-          version={currentVersion}
-          scrollTo={scrollTarget}
-          onClose={handleClosePanel}
-        />
+        <DetailPanel taxon={selected} version={currentVersion} scrollTo={scrollTarget} onClose={handleClosePanel} />
       )}
     </div>
   );
