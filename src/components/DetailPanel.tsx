@@ -48,6 +48,11 @@ function avibaseUrl(id?: string): string | null {
   return `https://avibase.bsc-eoc.org/species.jsp?avibaseid=${hash}`;
 }
 
+function ebirdUrl(code?: string): string | null {
+  if (!code) return null;
+  return `https://ebird.org/species/${code}`;
+}
+
 const SECTION_LABEL =
   "text-ink-2 mb-3 text-xs font-semibold uppercase tracking-[0.1em]";
 const META_LABEL =
@@ -104,6 +109,8 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
   const links: { label: string; href: string }[] = [];
   if (taxon.bowUrl)
     links.push({ label: "Birds of the World", href: taxon.bowUrl });
+  const ebirdHref = ebirdUrl(taxon.cornellCode);
+  if (ebirdHref) links.push({ label: "eBird", href: ebirdHref });
   if (taxon.birdLifeUrl)
     links.push({ label: "BirdLife DataZone", href: taxon.birdLifeUrl });
   const aviUrl = avibaseUrl(taxon.avibaseId);
