@@ -1,5 +1,4 @@
 import { readFile } from "node:fs/promises";
-import { gunzipSync } from "node:zlib";
 
 import { COLUMNS } from "../src/columns.ts";
 
@@ -136,9 +135,8 @@ function isLikelyFalsePositive(firstToken: string): boolean {
   return TRAP_WORDS.has(firstToken);
 }
 
-async function loadGz<T>(path: string): Promise<T> {
-  const buf = await readFile(path);
-  return JSON.parse(gunzipSync(buf).toString("utf8")) as T;
+async function loadJson<T>(path: string): Promise<T> {
+  return JSON.parse(await readFile(path, "utf8")) as T;
 }
 
 type CitationHit = {
@@ -174,11 +172,11 @@ async function main() {
 }
 
 async function checkVersion(version: Version): Promise<void> {
-  const speciesPath = `public/data/avilist-${version.id}.json.gz`;
-  const refsPath = `public/data/avilist-${version.id}-references.json.gz`;
+  const speciesPath = `public/data/avilist-${version.id}.json`;
+  const refsPath = `public/data/avilist-${version.id}-references.json`;
 
-  const compact = await loadGz<(string | null)[][]>(speciesPath);
-  const refs = await loadGz<Reference[]>(refsPath);
+  const compact = await loadJson<(string | null)[][]>(speciesPath);
+  const refs = await loadJson<Reference[]>(refsPath);
 
   const decisionIdx = COLUMNS.indexOf("decisionSummary");
   const rankIdx = COLUMNS.indexOf("rank");

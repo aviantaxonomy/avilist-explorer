@@ -7,7 +7,6 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { dirname } from "node:path";
-import { gzipSync, constants as zlibConstants } from "node:zlib";
 import { COLUMNS } from "../src/columns.ts";
 
 const VERSIONS_FILE = "public/versions.json";
@@ -162,12 +161,9 @@ async function processVersion(
   );
 
   const compactJson = JSON.stringify(compact);
-  const outPath = `public/data/avilist-${version.id}.json.gz`;
+  const outPath = `public/data/avilist-${version.id}.json`;
   await mkdir(dirname(outPath), { recursive: true });
-  await writeFile(
-    outPath,
-    gzipSync(compactJson, { level: zlibConstants.Z_BEST_COMPRESSION }),
-  );
+  await writeFile(outPath, compactJson);
 
   const { size } = await stat(outPath);
   console.log(`  Wrote ${outPath} (${(size / 1024 / 1024).toFixed(2)} MB)`);
@@ -229,11 +225,8 @@ async function processReferences(
     refs.push(ref);
   }
 
-  const outPath = `public/data/avilist-${version.id}-references.json.gz`;
-  await writeFile(
-    outPath,
-    gzipSync(JSON.stringify(refs), { level: zlibConstants.Z_BEST_COMPRESSION }),
-  );
+  const outPath = `public/data/avilist-${version.id}-references.json`;
+  await writeFile(outPath, JSON.stringify(refs));
   const { size } = await stat(outPath);
   console.log(
     `  ${refs.length} references → ${outPath} (${(size / 1024).toFixed(1)} KB)`,

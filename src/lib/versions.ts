@@ -53,11 +53,11 @@ export type VersionsManifest = {
 const BASE = import.meta.env.BASE_URL;
 
 export function dataPathFor(version: Version): string {
-  return `${BASE}data/avilist-${version.id}.json.gz`;
+  return `${BASE}data/avilist-${version.id}.json`;
 }
 
 export function referencesPathFor(version: Version): string {
-  return `${BASE}data/avilist-${version.id}-references.json.gz`;
+  return `${BASE}data/avilist-${version.id}-references.json`;
 }
 
 export function xlsxUrlFor(
