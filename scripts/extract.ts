@@ -19,6 +19,14 @@ type Version = {
   extendedXlsx: string;
   basicXlsx: string;
   sheet: string;
+  referencesSheet?: string;
+};
+
+type Reference = {
+  short: string;
+  full: string;
+  url?: string;
+  doi?: string;
 };
 
 type Manifest = {
@@ -171,6 +179,65 @@ async function processVersion(
   await copyFile(version.extendedXlsx, extendedDest);
   await copyFile(version.basicXlsx, basicDest);
   console.log(`  Copied xlsx files to public/data/`);
+
+  await processReferences(wb, version);
+}
+
+async function processReferences(
+  wb: ExcelJS.Workbook,
+  version: Version,
+): Promise<void> {
+  const sheetName = version.referencesSheet ?? "References";
+  const sheet = wb.getWorksheet(sheetName);
+  if (!sheet) {
+    console.warn(`  ⚠️  References sheet "${sheetName}" not found — skipping`);
+    return;
+  }
+
+  const headerIndex = new Map<string, number>();
+  sheet.getRow(1).eachCell({ includeEmpty: false }, (cell, col) => {
+    const name = cell.text;
+    if (name && !headerIndex.has(name)) headerIndex.set(name, col);
+  });
+
+  const shortCol = headerIndex.get("Short_reference");
+  const fullCol = headerIndex.get("Full_reference");
+  const urlCol = headerIndex.get("URL");
+  const doiCol = headerIndex.get("DOI");
+  if (shortCol == null || fullCol == null) {
+    console.warn(
+      `  ⚠️  References sheet missing Short_reference / Full_reference — skipping`,
+    );
+    return;
+  }
+
+  const refs: Reference[] = [];
+  for (let r = 2; r <= sheet.rowCount; r++) {
+    const row = sheet.getRow(r);
+    const short = cellValue(row.getCell(shortCol));
+    const full = cellValue(row.getCell(fullCol));
+    if (!short || !full) continue;
+    const ref: Reference = { short, full };
+    if (urlCol != null) {
+      const url = cellValue(row.getCell(urlCol));
+      if (url) ref.url = url;
+    }
+    if (doiCol != null) {
+      const doi = cellValue(row.getCell(doiCol));
+      if (doi) ref.doi = doi;
+    }
+    refs.push(ref);
+  }
+
+  const outPath = `public/data/avilist-${version.id}-references.json.gz`;
+  await writeFile(
+    outPath,
+    gzipSync(JSON.stringify(refs), { level: zlibConstants.Z_BEST_COMPRESSION }),
+  );
+  const { size } = await stat(outPath);
+  console.log(
+    `  ${refs.length} references → ${outPath} (${(size / 1024).toFixed(1)} KB)`,
+  );
 }
 
 async function main() {

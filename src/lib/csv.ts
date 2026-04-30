@@ -1,4 +1,4 @@
-import type { Species } from "./data";
+import type { Reference, Species } from "./data";
 import { COLUMNS, type Column } from "@/columns";
 
 const BASIC_FIELDS: Column[] = [
@@ -70,3 +70,29 @@ export function downloadCsv(
 
 export const EXTENDED_FIELD_COUNT = COLUMNS.length;
 export const BASIC_FIELD_COUNT = BASIC_FIELDS.length;
+
+export function downloadReferencesCsv(refs: Reference[], versionId: string) {
+  const headers = ["Short_reference", "Full_reference", "URL", "DOI"];
+  const lines = [headers.map(escape).join(",")];
+  for (const r of refs) {
+    lines.push(
+      [
+        escape(r.short),
+        escape(r.full),
+        escape(r.url ?? ""),
+        escape(r.doi ?? ""),
+      ].join(","),
+    );
+  }
+  const blob = new Blob(["﻿" + lines.join("\n")], {
+    type: "text/csv;charset=utf-8",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `avilist-${versionId}-references.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}

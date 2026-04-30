@@ -108,11 +108,10 @@ const renderText = (info: CellContext<Species, unknown>) => {
 
 type Props = {
   data: Species[];
-  selected: Species | null;
   onSelect: (s: Species, scrollTo?: string) => void;
 };
 
-export function SpeciesTable({ data, selected, onSelect }: Props) {
+export function SpeciesTable({ data, onSelect }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([
     { id: "sequence", desc: false },
@@ -313,17 +312,12 @@ export function SpeciesTable({ data, selected, onSelect }: Props) {
         {virtualizer.getVirtualItems().map((vRow) => {
           const row = rows[vRow.index];
           const rowRank = row.original.rank;
-          const isSelected =
-            selected != null && selected.sequence === row.original.sequence;
           return (
             <div
               key={row.id}
               className={[
                 "border-rule absolute inset-x-0 grid cursor-pointer border-b text-[13px] transition-colors",
                 rankRowClass(rowRank),
-                isSelected
-                  ? "bg-selected [&>:first-child]:shadow-[inset_3px_0_0_var(--color-accent-2)]"
-                  : "",
               ].join(" ")}
               style={{
                 gridTemplateColumns: gridTemplate,

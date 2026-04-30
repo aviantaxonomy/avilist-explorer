@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ExternalLink } from "lucide-react";
 import type { Species } from "@/lib/data";
 import {
@@ -12,9 +12,11 @@ import {
   parseProposalNumbers,
   type Version,
 } from "@/lib/versions";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Dialog as SheetPrimitive, VisuallyHidden } from "radix-ui";
 
 type Props = {
-  taxon: Species;
+  taxon: Species | null;
   version: Version;
   scrollTo?: string | null;
   onClose: () => void;
@@ -59,96 +61,83 @@ const META_LABEL =
   "text-ink-3 text-[11px] font-semibold uppercase tracking-wider";
 
 export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
+  // Hold onto the last non-null taxon so the close animation can still render
+  // its content while Radix unmounts.
+  const [displayed, setDisplayed] = useState<Species | null>(taxon);
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+    if (taxon) setDisplayed(taxon);
+  }, [taxon]);
 
   useEffect(() => {
-    if (!scrollTo) return;
-    // The panel mounts fresh per selection, so the section is already in the
-    // DOM by the time this effect runs.
+    if (!scrollTo || !taxon) return;
     const el = document.getElementById(scrollTo);
     if (el) el.scrollIntoView({ block: "start", behavior: "smooth" });
   }, [scrollTo, taxon]);
 
-  const rank = taxon.rank ?? "species";
-  const ancestry = buildLineage(taxon);
-  const iucnRaw = taxon.iucn;
+  if (!displayed) return null;
+
+  const rank = displayed.rank ?? "species";
+  const ancestry = buildLineage(displayed);
+  const iucnRaw = displayed.iucn;
   const iucn = baseIucnCode(iucnRaw);
   const info = iucn ? IUCN_INFO[iucn] : undefined;
   const qualifier = iucnQualifier(iucnRaw);
   const iucnLabel =
     info && qualifier ? `${info.label} (${qualifier})` : info?.label;
-  const english = taxon.name ?? taxon.nameClements ?? taxon.nameBirdLife;
+  const english = displayed.name ?? displayed.nameClements ?? displayed.nameBirdLife;
 
   const altNames: { source: string; name: string }[] = [];
-  if (taxon.nameClements && taxon.nameClements !== taxon.name) {
+  if (displayed.nameClements && displayed.nameClements !== displayed.name) {
     altNames.push({
       source: `Clements ${version.clementsVersion}`,
-      name: taxon.nameClements,
+      name: displayed.nameClements,
     });
   }
-  if (taxon.nameBirdLife && taxon.nameBirdLife !== taxon.name) {
+  if (displayed.nameBirdLife && displayed.nameBirdLife !== displayed.name) {
     altNames.push({
       source: `BirdLife ${version.birdLifeVersion}`,
-      name: taxon.nameBirdLife,
+      name: displayed.nameBirdLife,
     });
   }
 
   const hasOriginal =
-    taxon.authority ||
-    taxon.protonym ||
-    taxon.citation ||
-    taxon.originalDescriptionTitle ||
-    taxon.typeLocality;
+    displayed.authority ||
+    displayed.protonym ||
+    displayed.citation ||
+    displayed.originalDescriptionTitle ||
+    displayed.typeLocality;
 
   const links: { label: string; href: string }[] = [];
-  if (taxon.bowUrl)
-    links.push({ label: "Birds of the World", href: taxon.bowUrl });
+  if (displayed.bowUrl)
+    links.push({ label: "Birds of the World", href: displayed.bowUrl });
   if (rank === "species") {
-    const ebirdHref = ebirdUrl(taxon.cornellCode);
+    const ebirdHref = ebirdUrl(displayed.cornellCode);
     if (ebirdHref) links.push({ label: "eBird", href: ebirdHref });
   }
-  if (taxon.birdLifeUrl)
-    links.push({ label: "BirdLife DataZone", href: taxon.birdLifeUrl });
-  const aviUrl = avibaseUrl(taxon.avibaseId);
+  if (displayed.birdLifeUrl)
+    links.push({ label: "BirdLife DataZone", href: displayed.birdLifeUrl });
+  const aviUrl = avibaseUrl(displayed.avibaseId);
   if (aviUrl) links.push({ label: "Avibase", href: aviUrl });
 
   const hasGenusDetails =
-    rank === "genus" && (taxon.typeSpecies || taxon.genusGender);
+    rank === "genus" && (displayed.typeSpecies || displayed.genusGender);
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex justify-end bg-[rgba(14,14,12,0.3)]"
-      onClick={onClose}
-    >
-      <aside
-        className="bg-surface text-ink font-sans h-full w-[480px] overflow-y-auto px-7 pt-6 pb-9 shadow-[-10px_0_40px_rgba(0,0,0,0.1)]"
-        onClick={(e) => e.stopPropagation()}
+    <Sheet open={!!taxon} onOpenChange={(o) => !o && onClose()}>
+      <SheetContent
+        className="bg-surface text-ink font-sans gap-0 overflow-y-auto px-7 pt-6 pb-9 data-[side=right]:w-[540px] data-[side=right]:sm:max-w-[540px]"
       >
-        <div className="flex items-center justify-between">
+        <VisuallyHidden.Root>
+          <SheetPrimitive.Title>
+            {english ?? displayed.sciName}
+          </SheetPrimitive.Title>
+        </VisuallyHidden.Root>
+        <div>
           <span
             className={`font-sans inline-block min-w-[70px] rounded-[2px] border px-2.5 py-[5px] text-center text-[11px] font-semibold uppercase tracking-[0.1em] rank-badge-${rank}`}
           >
             {rank}
           </span>
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            className="bg-bg text-ink-2 hover:bg-rule grid h-8 w-8 cursor-pointer place-items-center rounded-full border-0"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-              <path
-                d="M3 3l10 10M13 3L3 13"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              />
-            </svg>
-          </button>
         </div>
         {english ? (
           <>
@@ -159,11 +148,11 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
               <span
                 className={`font-fraunces ${isItalicRank(rank) ? "italic" : ""}`}
               >
-                {taxon.sciName}
+                {displayed.sciName}
               </span>
-              {taxon.authority && (
+              {displayed.authority && (
                 <span className="text-ink-3 ml-2 text-sm">
-                  {taxon.authority}
+                  {displayed.authority}
                 </span>
               )}
             </div>
@@ -173,10 +162,10 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
             <h2
               className={`font-fraunces text-[36px] leading-[1.1] tracking-[-0.01em] ${isItalicRank(rank) ? "italic" : ""}`}
             >
-              {taxon.sciName}
+              {displayed.sciName}
             </h2>
-            {taxon.authority && (
-              <div className="text-ink-3 mt-1 text-sm">{taxon.authority}</div>
+            {displayed.authority && (
+              <div className="text-ink-3 mt-1 text-sm">{displayed.authority}</div>
             )}
           </div>
         )}
@@ -211,22 +200,22 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
                 <span
                   className={`font-fraunces text-accent-2 text-sm font-semibold ${isItalicRank(rank) ? "italic" : ""}`}
                 >
-                  {taxon.sciName}
+                  {displayed.sciName}
                 </span>
               </li>
             </ol>
           </section>
 
-          {taxon.decisionSummary && (
+          {displayed.decisionSummary && (
             <section
               id="decision-summary"
               className="bg-bg rounded-xl px-5 py-4"
             >
               <div className={SECTION_LABEL}>
                 Decision Summary
-                {taxon.proposalNumber && (
+                {displayed.proposalNumber && (
                   <span className="text-ink-3 ml-2 font-mono text-[11px] tracking-normal normal-case">
-                    {parseProposalNumbers(taxon.proposalNumber)
+                    {parseProposalNumbers(displayed.proposalNumber)
                       .map((n) => formatProposalNumber(version, n))
                       .join(", ")}
                   </span>
@@ -234,16 +223,16 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
               </div>
               <div
                 className="prose-museum text-ink text-sm leading-[1.6]"
-                dangerouslySetInnerHTML={{ __html: taxon.decisionSummary }}
+                dangerouslySetInnerHTML={{ __html: displayed.decisionSummary }}
               />
             </section>
           )}
 
-          {taxon.range && (
+          {displayed.range && (
             <section className="bg-bg rounded-xl px-5 py-4">
               <div className={SECTION_LABEL}>Range</div>
               <p className="text-ink m-0 text-sm leading-relaxed">
-                {taxon.range}
+                {displayed.range}
               </p>
             </section>
           )}
@@ -298,19 +287,19 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
             <section className="bg-bg rounded-xl px-5 py-4">
               <div className={SECTION_LABEL}>Genus</div>
               <dl className="m-0 grid grid-cols-[110px_1fr] gap-x-4 gap-y-2">
-                {taxon.typeSpecies && (
+                {displayed.typeSpecies && (
                   <>
                     <dt className={`m-0 pt-0.5 ${META_LABEL}`}>Type species</dt>
                     <dd className="font-fraunces text-ink m-0 text-sm italic">
-                      {taxon.typeSpecies}
+                      {displayed.typeSpecies}
                     </dd>
                   </>
                 )}
-                {taxon.genusGender && (
+                {displayed.genusGender && (
                   <>
                     <dt className={`m-0 pt-0.5 ${META_LABEL}`}>Gender</dt>
                     <dd className="text-ink m-0 text-sm">
-                      {taxon.genusGender}
+                      {displayed.genusGender}
                     </dd>
                   </>
                 )}
@@ -322,71 +311,71 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
             <section className="bg-bg rounded-xl px-5 py-4">
               <div className={SECTION_LABEL}>First described as protonym</div>
 
-              {(taxon.protonym || taxon.authority) && (
+              {(displayed.protonym || displayed.authority) && (
                 <div className="mb-4">
-                  {taxon.protonym && (
+                  {displayed.protonym && (
                     <div
                       className={`font-fraunces text-ink text-lg leading-tight ${isItalicRank(rank) ? "italic" : ""}`}
                     >
-                      {taxon.protonym}
+                      {displayed.protonym}
                     </div>
                   )}
-                  {taxon.authority && (
+                  {displayed.authority && (
                     <div className="text-ink-3 mt-1 text-xs">
                       {/* Brackets only apply to names AFTER the protonym
                           (combinatio nova) — never to the original. */}
-                      {taxon.authority.replace(/^\((.*)\)$/, "$1")}
+                      {displayed.authority.replace(/^\((.*)\)$/, "$1")}
                     </div>
                   )}
                 </div>
               )}
 
-              {(taxon.originalDescriptionTitle || taxon.citation) && (
+              {(displayed.originalDescriptionTitle || displayed.citation) && (
                 <div className="mb-3.5">
-                  {taxon.originalDescriptionTitle && (
+                  {displayed.originalDescriptionTitle && (
                     <div className="text-ink text-sm leading-snug">
-                      {taxon.originalDescriptionUrl ? (
+                      {displayed.originalDescriptionUrl ? (
                         <a
-                          href={taxon.originalDescriptionUrl}
+                          href={displayed.originalDescriptionUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-ink border-rule hover:border-ink inline border-b no-underline"
                         >
-                          {taxon.originalDescriptionTitle}
+                          {displayed.originalDescriptionTitle}
                           <ExternalLink className="text-ink-3 ml-1 inline-block h-3 w-3 align-[-2px]" />
                         </a>
                       ) : (
-                        taxon.originalDescriptionTitle
+                        displayed.originalDescriptionTitle
                       )}
                     </div>
                   )}
-                  {taxon.citation && (
+                  {displayed.citation && (
                     <div className="text-ink-2 mt-1.5 text-xs leading-relaxed">
-                      {!taxon.originalDescriptionTitle &&
-                      taxon.originalDescriptionUrl ? (
+                      {!displayed.originalDescriptionTitle &&
+                      displayed.originalDescriptionUrl ? (
                         <a
-                          href={taxon.originalDescriptionUrl}
+                          href={displayed.originalDescriptionUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-ink-2 border-rule hover:border-ink-2 border-b no-underline"
                         >
-                          {taxon.citation}
+                          {displayed.citation}
                           <ExternalLink className="text-ink-3 ml-1 inline-block h-3 w-3 align-[-2px]" />
                         </a>
                       ) : (
-                        taxon.citation
+                        displayed.citation
                       )}
                     </div>
                   )}
                 </div>
               )}
 
-              {taxon.typeLocality && (
+              {displayed.typeLocality && (
                 <p className="text-ink-2 m-0 text-xs leading-relaxed">
                   <span className={`mr-1 ${META_LABEL}`}>
                     Type specimen(s) from:
                   </span>
-                  {taxon.typeLocality}
+                  {displayed.typeLocality}
                 </p>
               )}
             </section>
@@ -414,7 +403,7 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
             </section>
           )}
         </div>
-      </aside>
-    </div>
+      </SheetContent>
+    </Sheet>
   );
 }

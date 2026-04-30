@@ -1,13 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, MoreVertical, BookOpen } from "lucide-react";
 import { SpeciesTable } from "@/components/SpeciesTable";
 import { FilterBar } from "@/components/FilterBar";
 import { DetailPanel } from "@/components/DetailPanel";
 import { VersionPicker } from "@/components/VersionPicker";
 import { DownloadDialog } from "@/components/DownloadDialog";
-import { loadSpecies, type Species } from "@/lib/data";
+import { ReferencesSheet } from "@/components/ReferencesSheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { loadReferences, loadSpecies, type Reference, type Species } from "@/lib/data";
 import { applyFilters, computeFacets, emptyFilters, isFilterActive, type FilterState } from "@/lib/filters";
-import { dataPathFor, defaultVersion, loadVersions, type VersionsManifest } from "@/lib/versions";
+import { dataPathFor, defaultVersion, loadVersions, referencesPathFor, type VersionsManifest } from "@/lib/versions";
 import logo from "@/assets/logo.webp";
 
 const STORAGE_KEY = "avilist:version";
@@ -16,11 +23,13 @@ export function App() {
   const [manifest, setManifest] = useState<VersionsManifest | null>(null);
   const [versionId, setVersionId] = useState<string | null>(null);
   const [data, setData] = useState<Species[] | null>(null);
+  const [references, setReferences] = useState<Reference[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterState>(emptyFilters);
   const [selected, setSelected] = useState<Species | null>(null);
   const [scrollTarget, setScrollTarget] = useState<string | null>(null);
   const [downloadOpen, setDownloadOpen] = useState(false);
+  const [referencesOpen, setReferencesOpen] = useState(false);
 
   const handleSelect = (s: Species, scrollTo?: string) => {
     setSelected(s);
@@ -52,9 +61,25 @@ export function App() {
   useEffect(() => {
     if (!currentVersion) return;
     setData(null);
+    setReferences(null);
     setSelected(null);
     loadSpecies(dataPathFor(currentVersion)).then(setData, (e) => setError(String(e)));
   }, [currentVersion]);
+
+  // Prefetch references in the background after the main species data has
+  // loaded, so opening the References sheet feels instant.
+  useEffect(() => {
+    if (!currentVersion || !data) return;
+    let cancelled = false;
+    loadReferences(referencesPathFor(currentVersion)).then(
+      (r) => !cancelled && setReferences(r),
+      // Swallow errors — sheet will fall back to its own loading state.
+      () => {},
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [currentVersion, data]);
 
   useEffect(() => {
     document.title = currentVersion ? `AviList ${currentVersion.label}` : "AviList";
@@ -79,7 +104,7 @@ export function App() {
             <VersionPicker versions={manifest.versions} current={versionId} onChange={handleVersionChange} />
           </div>
         )}
-        <div className="hidden sm:ml-auto sm:flex">
+        <div className="hidden sm:ml-auto sm:flex sm:items-center sm:gap-2">
           <button
             type="button"
             disabled={!filtered}
@@ -99,6 +124,23 @@ export function App() {
             </svg>
             Download
           </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              aria-label="More options"
+              className="border-rule bg-surface text-ink-2 hover:border-ink-3 grid h-9 w-9 cursor-pointer place-items-center rounded-md border outline-none transition-colors"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" sideOffset={8} className="min-w-44 p-1.5">
+              <DropdownMenuItem
+                onSelect={() => setReferencesOpen(true)}
+                className="gap-2 px-2.5 py-1.5"
+              >
+                <BookOpen />
+                References
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
@@ -136,12 +178,21 @@ export function App() {
               </>
             }
           />
-          <SpeciesTable data={filtered} selected={selected} onSelect={handleSelect} />
+          <SpeciesTable data={filtered} onSelect={handleSelect} />
         </>
       )}
 
-      {selected && currentVersion && (
+      {currentVersion && (
         <DetailPanel taxon={selected} version={currentVersion} scrollTo={scrollTarget} onClose={handleClosePanel} />
+      )}
+
+      {currentVersion && (
+        <ReferencesSheet
+          open={referencesOpen}
+          onOpenChange={setReferencesOpen}
+          version={currentVersion}
+          references={references}
+        />
       )}
     </div>
   );

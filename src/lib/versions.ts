@@ -53,6 +53,10 @@ export function dataPathFor(version: Version): string {
   return `${BASE}data/avilist-${version.id}.json.gz`;
 }
 
+export function referencesPathFor(version: Version): string {
+  return `${BASE}data/avilist-${version.id}-references.json.gz`;
+}
+
 export function xlsxUrlFor(
   version: Version,
   variant: "basic" | "extended",
