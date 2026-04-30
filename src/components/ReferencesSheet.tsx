@@ -45,7 +45,7 @@ export function ReferencesSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
-        className="bg-surface text-ink font-sans flex flex-col gap-0 px-0 pt-0 pb-0 data-[side=right]:w-[560px] data-[side=right]:sm:max-w-[560px]"
+        className="bg-surface text-ink font-sans flex flex-col gap-0 px-0 pt-0 pb-0 data-[side=right]:w-full data-[side=right]:sm:w-[560px] data-[side=right]:sm:max-w-[560px]"
       >
         <SheetHeader className="border-rule border-b px-6 py-5">
           <SheetTitle className="text-ink text-lg font-medium">

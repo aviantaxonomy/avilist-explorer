@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, MoreVertical, BookOpen, Quote } from "lucide-react";
+import { Loader2, MoreVertical, BookOpen, Quote, Download } from "lucide-react";
 import { SpeciesTable } from "@/components/SpeciesTable";
 import { FilterBar } from "@/components/FilterBar";
 import { DetailPanel } from "@/components/DetailPanel";
@@ -97,7 +97,7 @@ export function App() {
 
   return (
     <div className="bg-bg text-ink font-sans flex h-screen flex-col overflow-hidden">
-      <header className="bg-surface border-rule flex items-center gap-4 border-b px-4 py-[18px] sm:gap-6 sm:px-8">
+      <header className="bg-surface border-rule flex items-center gap-2 border-b px-4 py-[18px] sm:gap-6 sm:px-8">
         <a href="https://avilist.org/" aria-label="AviList — The Global Avian Checklist">
           <img src={logo} alt="AviList — The Global Avian Checklist" className="block h-9 w-auto" />
         </a>
@@ -106,12 +106,12 @@ export function App() {
             <VersionPicker versions={manifest.versions} current={versionId} onChange={handleVersionChange} />
           </div>
         )}
-        <div className="hidden sm:ml-auto sm:flex sm:items-center sm:gap-2">
+        <div className="flex items-center gap-2 sm:ml-auto">
           <button
             type="button"
             disabled={!filtered}
             onClick={() => setDownloadOpen(true)}
-            className="bg-ink text-bg inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border-0 px-4 text-[13px] font-medium hover:bg-[#2c2c28] disabled:cursor-not-allowed disabled:opacity-50"
+            className="bg-ink text-bg hidden h-9 cursor-pointer items-center gap-2 rounded-md border-0 px-4 text-[13px] font-medium hover:bg-[#2c2c28] disabled:cursor-not-allowed disabled:opacity-50 sm:inline-flex"
           >
             <svg
               width="14"
@@ -134,6 +134,14 @@ export function App() {
               <MoreVertical className="h-4 w-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" sideOffset={8} className="min-w-56 p-1.5">
+              <DropdownMenuItem
+                onSelect={() => setDownloadOpen(true)}
+                disabled={!filtered}
+                className="gap-2 px-2.5 py-1.5 sm:hidden"
+              >
+                <Download />
+                Download
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() => setCitationOpen(true)}
                 className="gap-2 px-2.5 py-1.5"

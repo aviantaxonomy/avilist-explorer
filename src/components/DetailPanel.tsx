@@ -125,7 +125,7 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
   return (
     <Sheet open={!!taxon} onOpenChange={(o) => !o && onClose()}>
       <SheetContent
-        className="bg-surface text-ink font-sans gap-0 overflow-y-auto px-7 pt-6 pb-9 data-[side=right]:w-[540px] data-[side=right]:sm:max-w-[540px]"
+        className="bg-surface text-ink font-sans gap-0 overflow-y-auto px-5 pt-6 pb-9 sm:px-7 data-[side=right]:w-full data-[side=right]:sm:w-[540px] data-[side=right]:sm:max-w-[540px]"
       >
         <VisuallyHidden.Root>
           <SheetPrimitive.Title>
