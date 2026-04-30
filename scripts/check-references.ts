@@ -130,12 +130,11 @@ function stripHtml(s: string): string {
     .replace(/&#39;/g, "'");
 }
 
-function isLikelyFalsePositive(match: string, firstToken: string): boolean {
-  // The first token is the first capitalized word of the matched span. If it's
-  // a common English word (and there's no second author or "et al."), the
-  // match is almost certainly a sentence start, not a real citation.
-  if (TRAP_WORDS.has(firstToken)) return true;
-  return false;
+function isLikelyFalsePositive(firstToken: string): boolean {
+  // The first token is the first capitalized word of the matched span. If
+  // it's a common English word, the match is almost certainly a sentence
+  // start, not a real citation.
+  return TRAP_WORDS.has(firstToken);
 }
 
 async function loadGz<T>(path: string): Promise<T> {
@@ -275,7 +274,7 @@ async function checkVersion(version: Version): Promise<void> {
     let category: UnknownCategory;
     let closestKnown: string | undefined;
 
-    if (isLikelyFalsePositive(sample.raw, firstToken)) {
+    if (isLikelyFalsePositive(firstToken)) {
       category = "false_positive";
     } else if (refsByConnectiveSuffix.get(norm)?.length) {
       // Regex-clipped: the unknown matches the tail of a multi-author ref,
