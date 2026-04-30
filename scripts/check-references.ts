@@ -5,7 +5,6 @@ import { COLUMNS } from "../src/columns.ts";
 
 const VERSIONS_FILE = "public/versions.json";
 const VERBOSE = process.argv.includes("--verbose") || process.argv.includes("-v");
-const SHOW_UNUSED = process.argv.includes("--unused") || process.argv.includes("-u");
 
 type Version = { id: string; label: string };
 type Manifest = { versions: Version[] };
@@ -378,11 +377,9 @@ async function checkVersion(version: Version): Promise<void> {
     (s, u) => s + u.occurrences,
     0,
   );
-  const unusedRefs = refs.filter((r) => !knownHits.has(r.short));
-
   console.log(`Summaries: ${totalSummaries}`);
   console.log(`Matches: ${totalMatches} (${totalKnownOccurrences} resolved, ${unknownOccurrences} unresolved)`);
-  console.log(`Bibliography: ${refs.length} (${distinctKnown} cited, ${unusedRefs.length} unused)`);
+  console.log(`Bibliography: ${refs.length} (${distinctKnown} cited)`);
 
   // Unresolved citations, grouped by category.
   const groups: Record<UnknownCategory, CategorizedUnknown[]> = {
@@ -399,17 +396,6 @@ async function checkVersion(version: Version): Promise<void> {
   printGroup("Typo / variant", groups.typo_or_variant);
   printGroup("Regex clipped", groups.regex_clipped);
   printList("False positive", groups.false_positive);
-
-  if (SHOW_UNUSED) {
-    console.log(`\n--- Unused references (${unusedRefs.length}) ---`);
-    const cap = VERBOSE ? unusedRefs.length : 50;
-    for (const r of unusedRefs.slice(0, cap)) {
-      console.log(`  • ${r.short}`);
-    }
-    if (unusedRefs.length > cap) {
-      console.log(`  … and ${unusedRefs.length - cap} more (--verbose for all)`);
-    }
-  }
 }
 
 function orderForCategory(c: UnknownCategory): number {
