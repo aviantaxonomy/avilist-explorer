@@ -309,7 +309,7 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
 
           {hasOriginal && (
             <section className="bg-bg rounded-xl px-5 py-4">
-              <div className={SECTION_LABEL}>First described as protonym</div>
+              <div className={SECTION_LABEL}>First described as</div>
 
               {(displayed.protonym || displayed.authority) && (
                 <div className="mb-4">
