@@ -6,7 +6,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "extract": "node scripts/extract.ts"
+    "extract": "node scripts/extract.ts",
+    "check-references": "node scripts/check-references.ts"
   },
   "repository": {
     "type": "git",
