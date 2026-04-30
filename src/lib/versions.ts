@@ -9,6 +9,9 @@ export type Version = {
   birdLifeVersion: string;
   /** Prefix used to namespace proposal numbers, e.g. "2025" → "2025-117". */
   decisionSummaryPrefix: string;
+  citation: string;
+  license: string;
+  contributors: string;
 };
 
 /**

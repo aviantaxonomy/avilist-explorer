@@ -37,7 +37,10 @@
       "sheet": "AviList v2025 extended",
       "clementsVersion": "v2024",
       "birdLifeVersion": "v9",
-      "decisionSummaryPrefix": "2025"
+      "decisionSummaryPrefix": "2025",
+      "citation": "AviList Core Team. 2025. AviList: The Global Avian Checklist, v2025. https://doi.org/10.2173/avilist.v2025",
+      "license": "AviList: The Global Avian Checklist © 2025 by AviList Core Team is licensed under CC BY 4.0",
+      "contributors": "Les Christidis, Frank E. Rheindt, Marshall J. Iliff, Denis Lepage, Pamela C. Rasmussen, Paul Donald, Per Alström, Juan Ignacio Areta, Frederik Brammer, Terry Chesser, David Donsker, Bob Dowsett, Jeffrey Gerbracht, Max Kirsch, Marek Kuziemko, Markus Lagerqvist, Richard Littauer, Wayne Longmore, Janette Norman, Alan Peterson, Richard Schodde, Tom Schulenberg, Martin Stervander"
     }
   ]
 }

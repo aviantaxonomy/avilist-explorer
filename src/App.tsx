@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, MoreVertical, BookOpen } from "lucide-react";
+import { Loader2, MoreVertical, BookOpen, Quote } from "lucide-react";
 import { SpeciesTable } from "@/components/SpeciesTable";
 import { FilterBar } from "@/components/FilterBar";
 import { DetailPanel } from "@/components/DetailPanel";
 import { VersionPicker } from "@/components/VersionPicker";
 import { DownloadDialog } from "@/components/DownloadDialog";
 import { ReferencesSheet } from "@/components/ReferencesSheet";
+import { CitationSheet } from "@/components/CitationSheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +31,7 @@ export function App() {
   const [scrollTarget, setScrollTarget] = useState<string | null>(null);
   const [downloadOpen, setDownloadOpen] = useState(false);
   const [referencesOpen, setReferencesOpen] = useState(false);
+  const [citationOpen, setCitationOpen] = useState(false);
 
   const handleSelect = (s: Species, scrollTo?: string) => {
     setSelected(s);
@@ -131,7 +133,14 @@ export function App() {
             >
               <MoreVertical className="h-4 w-4" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" sideOffset={8} className="min-w-44 p-1.5">
+            <DropdownMenuContent align="end" sideOffset={8} className="min-w-56 p-1.5">
+              <DropdownMenuItem
+                onSelect={() => setCitationOpen(true)}
+                className="gap-2 px-2.5 py-1.5"
+              >
+                <Quote />
+                Recommended Citation
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() => setReferencesOpen(true)}
                 className="gap-2 px-2.5 py-1.5"
@@ -192,6 +201,14 @@ export function App() {
           onOpenChange={setReferencesOpen}
           version={currentVersion}
           references={references}
+        />
+      )}
+
+      {currentVersion && (
+        <CitationSheet
+          open={citationOpen}
+          onOpenChange={setCitationOpen}
+          version={currentVersion}
         />
       )}
     </div>
