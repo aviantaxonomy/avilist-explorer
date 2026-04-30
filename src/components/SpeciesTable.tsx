@@ -157,6 +157,12 @@ export function SpeciesTable({ data, onSelect }: Props) {
         ),
       },
       {
+        accessorKey: "authority",
+        header: "Authority",
+        size: 160,
+        cell: renderText,
+      },
+      {
         accessorKey: "range",
         header: "Range",
         size: 420,
