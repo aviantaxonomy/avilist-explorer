@@ -24,6 +24,7 @@ type Props = {
   formatLabel?: (value: string) => ReactNode;
   getKeywords?: (value: string) => string[];
   popoverWidth?: string;
+  maxResults?: number;
 };
 
 export function MultiSelectFilter({
@@ -34,6 +35,7 @@ export function MultiSelectFilter({
   formatLabel = (v) => v,
   getKeywords,
   popoverWidth = "w-72",
+  maxResults,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -46,13 +48,15 @@ export function MultiSelectFilter({
   };
 
   const q = search.trim().toLowerCase();
-  const filtered = !q
+  const matched = !q
     ? options
     : options.filter((opt) => {
         if (opt.toLowerCase().includes(q)) return true;
         const keywords = getKeywords?.(opt);
         return keywords?.some((k) => k.toLowerCase().includes(q)) ?? false;
       });
+  const truncated = maxResults != null && matched.length > maxResults;
+  const filtered = truncated ? matched.slice(0, maxResults) : matched;
 
   return (
     <Popover
@@ -111,6 +115,12 @@ export function MultiSelectFilter({
                     </CommandItem>
                   );
                 })}
+                {truncated && (
+                  <div className="text-muted-foreground px-2 py-2 text-center text-[11px]">
+                    Showing first {maxResults} of{" "}
+                    {matched.length.toLocaleString()}. Keep typing to refine.
+                  </div>
+                )}
               </CommandGroup>
             )}
           </CommandList>

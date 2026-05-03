@@ -34,6 +34,7 @@ export type FilterState = {
   iucn: Set<string>;
   orders: Set<string>;
   families: Set<string>;
+  genera: Set<string>;
 };
 
 export const emptyFilters: FilterState = {
@@ -42,6 +43,7 @@ export const emptyFilters: FilterState = {
   iucn: new Set(),
   orders: new Set(),
   families: new Set(),
+  genera: new Set(),
 };
 
 export function isFilterActive(f: FilterState): boolean {
@@ -50,7 +52,8 @@ export function isFilterActive(f: FilterState): boolean {
     f.ranks.size > 0 ||
     f.iucn.size > 0 ||
     f.orders.size > 0 ||
-    f.families.size > 0
+    f.families.size > 0 ||
+    f.genera.size > 0
   );
 }
 
@@ -58,12 +61,29 @@ export type Facets = {
   orders: string[];
   families: string[];
   familyEnglish: Record<string, string>;
+  genera: string[];
 };
+
+// Genus is the first whitespace-delimited token of sciName for any taxon at
+// or below the genus rank. Higher ranks (order/family) have non-genus sciNames
+// and are excluded.
+function genusOf(row: Species): string | null {
+  if (
+    row.rank !== "genus" &&
+    row.rank !== "species" &&
+    row.rank !== "subspecies"
+  )
+    return null;
+  if (!row.sciName) return null;
+  const space = row.sciName.indexOf(" ");
+  return space === -1 ? row.sciName : row.sciName.slice(0, space);
+}
 
 export function computeFacets(data: Species[]): Facets {
   const orders = new Set<string>();
   const familySet = new Set<string>();
   const familyEnglish: Record<string, string> = {};
+  const generaSet = new Set<string>();
   for (const row of data) {
     if (row.order) orders.add(row.order);
     if (row.family) {
@@ -72,6 +92,8 @@ export function computeFacets(data: Species[]): Facets {
         familyEnglish[row.family] = row.familyEn;
       }
     }
+    const genus = genusOf(row);
+    if (genus) generaSet.add(genus);
   }
   const families = [...familySet].sort((a, b) => {
     const ae = familyEnglish[a] ?? a;
@@ -82,6 +104,7 @@ export function computeFacets(data: Species[]): Facets {
     orders: [...orders].sort(),
     families,
     familyEnglish,
+    genera: [...generaSet].sort(),
   };
 }
 
@@ -99,6 +122,10 @@ export function applyFilters(data: Species[], f: FilterState): Species[] {
       continue;
     if (f.families.size > 0 && (!row.family || !f.families.has(row.family)))
       continue;
+    if (f.genera.size > 0) {
+      const genus = genusOf(row);
+      if (!genus || !f.genera.has(genus)) continue;
+    }
     if (search) {
       let match = false;
       for (const field of SEARCH_FIELDS) {

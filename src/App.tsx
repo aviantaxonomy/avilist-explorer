@@ -189,6 +189,7 @@ export function App() {
             filters={filters}
             facets={facets}
             onChange={setFilters}
+            resultsCount={filtered.length}
             resultsLabel={
               <>
                 Showing <b>{filtered.length.toLocaleString()}</b> taxa
