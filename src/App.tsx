@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, MoreVertical, BookOpen, Quote, Download } from "lucide-react";
+import { Loader2, MoreVertical, BookOpen, Quote, Download, Info } from "lucide-react";
 import { SpeciesTable } from "@/components/SpeciesTable";
 import { FilterBar } from "@/components/FilterBar";
 import { DetailPanel } from "@/components/DetailPanel";
@@ -155,6 +155,16 @@ export function App() {
               >
                 <BookOpen />
                 References
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="gap-2 px-2.5 py-1.5">
+                <a
+                  href="https://www.avilist.org/about/"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  <Info />
+                  About AviList
+                </a>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
