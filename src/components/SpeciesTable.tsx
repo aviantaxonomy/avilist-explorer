@@ -12,6 +12,7 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { FileText } from "lucide-react";
 import type { Species } from "@/lib/data";
+import type { LocaleNames } from "@/lib/ebird";
 import { baseIucnCode, IUCN_INFO } from "@/lib/iucn";
 
 const ROW_HEIGHT = 48;
@@ -109,9 +110,11 @@ const renderText = (info: CellContext<Species, unknown>) => {
 type Props = {
   data: Species[];
   onSelect: (s: Species, scrollTo?: string) => void;
+  localeLabel?: string | null;
+  localeNames?: LocaleNames | null;
 };
 
-export function SpeciesTable({ data, onSelect }: Props) {
+export function SpeciesTable({ data, onSelect, localeLabel, localeNames }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([
     { id: "sequence", desc: false },
@@ -141,10 +144,25 @@ export function SpeciesTable({ data, onSelect }: Props) {
       },
       {
         accessorKey: "name",
-        header: "English name",
+        header: "English (AviList)",
         size: 200,
         cell: renderText,
       },
+      ...(localeLabel && localeNames
+        ? [
+            {
+              id: "localeName",
+              header: localeLabel,
+              size: 200,
+              accessorFn: (row: Species) => {
+                if (row.rank !== "species") return undefined;
+                const code = row.cornellCode;
+                return code ? localeNames[code] : undefined;
+              },
+              cell: renderText,
+            } as ColumnDef<Species>,
+          ]
+        : []),
       {
         accessorKey: "sciName",
         header: "Scientific name",
@@ -214,7 +232,7 @@ export function SpeciesTable({ data, onSelect }: Props) {
         ),
       },
     ],
-    [onSelect],
+    [onSelect, localeLabel, localeNames],
   );
 
   const table = useReactTable({

@@ -7,23 +7,23 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import type { Reference } from "@/lib/data";
-import type { Version } from "@/lib/versions";
+import { useQuery } from "@tanstack/react-query";
+import { loadReferences, type Reference } from "@/lib/data";
+import { referencesPathFor, type Version } from "@/lib/versions";
 import { downloadReferencesCsv } from "@/lib/csv";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   version: Version;
-  references: Reference[] | null;
 };
 
-export function ReferencesSheet({
-  open,
-  onOpenChange,
-  version,
-  references,
-}: Props) {
+export function ReferencesSheet({ open, onOpenChange, version }: Props) {
+  const { data: references = null } = useQuery({
+    queryKey: ["references", version.id],
+    queryFn: () => loadReferences(referencesPathFor(version)),
+    staleTime: Infinity,
+  });
   const [query, setQuery] = useState("");
 
   // Reset query when switching versions.
