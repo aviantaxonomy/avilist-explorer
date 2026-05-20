@@ -64,9 +64,7 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
   // Hold onto the last non-null taxon so the close animation can still render
   // its content while Radix unmounts.
   const [displayed, setDisplayed] = useState<Species | null>(taxon);
-  useEffect(() => {
-    if (taxon) setDisplayed(taxon);
-  }, [taxon]);
+  if (taxon && taxon !== displayed) setDisplayed(taxon);
 
   useEffect(() => {
     if (!scrollTo || !taxon) return;

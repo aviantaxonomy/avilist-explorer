@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Download, ExternalLink, Loader2, Search } from "lucide-react";
 import {
@@ -25,11 +25,6 @@ export function ReferencesSheet({ open, onOpenChange, version }: Props) {
     staleTime: Infinity,
   });
   const [query, setQuery] = useState("");
-
-  // Reset query when switching versions.
-  useEffect(() => {
-    setQuery("");
-  }, [version.id]);
 
   const filtered = useMemo(() => {
     if (!references) return null;

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -120,120 +120,117 @@ export function SpeciesTable({ data, onSelect, localeLabel, localeNames }: Props
     { id: "sequence", desc: false },
   ]);
 
-  const columns = useMemo<ColumnDef<Species>[]>(
-    () => [
-      {
-        accessorKey: "sequence",
-        header: "#",
-        size: 73,
-        sortingFn: "alphanumeric",
-        cell: (ctx) => (
-          <span className="font-mono text-ink-3 text-[11px] [font-variant-numeric:tabular-nums]">
-            {ctx.getValue() as string | undefined}
-          </span>
-        ),
-      },
-      {
-        accessorKey: "rank",
-        header: "Rank",
-        size: 120,
-        sortingFn: rankSort,
-        cell: (ctx) => (
-          <RankBadge rank={ctx.getValue() as string | undefined} />
-        ),
-      },
-      {
-        accessorKey: "name",
-        header: "English (AviList)",
-        size: 200,
-        cell: renderText,
-      },
-      ...(localeLabel && localeNames
-        ? [
-            {
-              id: "localeName",
-              header: localeLabel,
-              size: 200,
-              accessorFn: (row: Species) => {
-                if (row.rank !== "species") return undefined;
-                const code = row.cornellCode;
-                return code ? localeNames[code] : undefined;
-              },
-              cell: renderText,
-            } as ColumnDef<Species>,
-          ]
-        : []),
-      {
-        accessorKey: "sciName",
-        header: "Scientific name",
-        size: 280,
-        cell: (ctx) => (
-          <ScientificCell
-            value={ctx.getValue() as string | undefined}
-            rank={ctx.row.original.rank}
-          />
-        ),
-      },
-      {
-        accessorKey: "authority",
-        header: "Authority",
-        size: 160,
-        cell: renderText,
-      },
-      {
-        accessorKey: "range",
-        header: "Range",
-        size: 420,
-        cell: renderText,
-      },
-      {
-        accessorKey: "proposalNumber",
-        header: "Decision",
-        size: 104,
-        sortingFn: "alphanumeric",
-        cell: (ctx) => {
-          const value = ctx.getValue() as string | undefined;
-          if (!value) return null;
-          return (
-            <button
-              type="button"
-              className="text-ink-2 hover:text-ink inline-flex cursor-pointer items-center gap-1 text-[12px] font-medium"
-              title="View decision summary"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelect(ctx.row.original, "decision-summary");
-              }}
-            >
-              <FileText className="size-3" />
-              <span className="underline underline-offset-2">View</span>
-            </button>
-          );
-        },
-      },
-      {
-        accessorKey: "iucn",
-        header: "IUCN",
-        size: 120,
-        sortingFn: iucnSort,
-        cell: (ctx) => <IucnPill code={ctx.getValue() as string | undefined} />,
-      },
-      {
-        id: "details",
-        header: "",
-        size: 96,
-        enableSorting: false,
-        cell: () => (
+  const columns: ColumnDef<Species>[] = [
+    {
+      accessorKey: "sequence",
+      header: "#",
+      size: 73,
+      sortingFn: "alphanumeric",
+      cell: (ctx) => (
+        <span className="font-mono text-ink-3 text-[11px] [font-variant-numeric:tabular-nums]">
+          {ctx.getValue() as string | undefined}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "rank",
+      header: "Rank",
+      size: 120,
+      sortingFn: rankSort,
+      cell: (ctx) => (
+        <RankBadge rank={ctx.getValue() as string | undefined} />
+      ),
+    },
+    {
+      accessorKey: "name",
+      header: "English (AviList)",
+      size: 200,
+      cell: renderText,
+    },
+    ...(localeLabel && localeNames
+      ? [
+          {
+            id: "localeName",
+            header: localeLabel,
+            size: 200,
+            accessorFn: (row: Species) => {
+              if (row.rank !== "species") return undefined;
+              const code = row.cornellCode;
+              return code ? localeNames[code] : undefined;
+            },
+            cell: renderText,
+          } as ColumnDef<Species>,
+        ]
+      : []),
+    {
+      accessorKey: "sciName",
+      header: "Scientific name",
+      size: 280,
+      cell: (ctx) => (
+        <ScientificCell
+          value={ctx.getValue() as string | undefined}
+          rank={ctx.row.original.rank}
+        />
+      ),
+    },
+    {
+      accessorKey: "authority",
+      header: "Authority",
+      size: 160,
+      cell: renderText,
+    },
+    {
+      accessorKey: "range",
+      header: "Range",
+      size: 420,
+      cell: renderText,
+    },
+    {
+      accessorKey: "proposalNumber",
+      header: "Decision",
+      size: 104,
+      sortingFn: "alphanumeric",
+      cell: (ctx) => {
+        const value = ctx.getValue() as string | undefined;
+        if (!value) return null;
+        return (
           <button
             type="button"
-            className="text-ink-2 hover:text-ink cursor-pointer text-[12px] font-medium underline underline-offset-2"
+            className="text-ink-2 hover:text-ink inline-flex cursor-pointer items-center gap-1 text-[12px] font-medium"
+            title="View decision summary"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(ctx.row.original, "decision-summary");
+            }}
           >
-            Details
+            <FileText className="size-3" />
+            <span className="underline underline-offset-2">View</span>
           </button>
-        ),
+        );
       },
-    ],
-    [onSelect, localeLabel, localeNames],
-  );
+    },
+    {
+      accessorKey: "iucn",
+      header: "IUCN",
+      size: 120,
+      sortingFn: iucnSort,
+      cell: (ctx) => <IucnPill code={ctx.getValue() as string | undefined} />,
+    },
+    {
+      id: "details",
+      header: "",
+      size: 96,
+      enableSorting: false,
+      cell: () => (
+        <button
+          type="button"
+          className="text-ink-2 hover:text-ink cursor-pointer text-[12px] font-medium underline underline-offset-2"
+        >
+          Details
+        </button>
+      ),
+    },
+  ];
 
   const table = useReactTable({
     data,

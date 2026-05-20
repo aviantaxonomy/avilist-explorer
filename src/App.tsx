@@ -35,22 +35,17 @@ export function App() {
   const filters = usePrefs((s) => s.filters);
   const setFilters = usePrefs((s) => s.setFilters);
 
-  const [selected, setSelected] = useState<Species | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [scrollTarget, setScrollTarget] = useState<string | null>(null);
   const [downloadOpen, setDownloadOpen] = useState(false);
   const [referencesOpen, setReferencesOpen] = useState(false);
   const [citationOpen, setCitationOpen] = useState(false);
 
-  useEffect(() => {
-    if (!manifest) return;
-    const exists = versionId && manifest.versions.some((v) => v.id === versionId);
-    if (!exists) setVersionId(defaultVersion(manifest)?.id ?? null);
-  }, [manifest, versionId, setVersionId]);
-
-  const currentVersion = useMemo(() => {
-    if (!manifest || !versionId) return null;
-    return manifest.versions.find((v) => v.id === versionId) ?? null;
-  }, [manifest, versionId]);
+  const currentVersion = manifest
+    ? (versionId && manifest.versions.find((v) => v.id === versionId)) ||
+      defaultVersion(manifest) ||
+      null
+    : null;
 
   const isLatestVersion = !!manifest && currentVersion?.id === defaultVersion(manifest)?.id;
 
@@ -60,11 +55,6 @@ export function App() {
     enabled: !!currentVersion,
     staleTime: Infinity,
   });
-
-  useEffect(() => {
-    setSelected(null);
-    setScrollTarget(null);
-  }, [currentVersion?.id]);
 
   const { data: locales } = useQuery({
     queryKey: ["ebird", "locales"],
@@ -79,13 +69,13 @@ export function App() {
   });
 
   useEffect(() => {
-    if (!locales || !locale) return;
-    if (!locales.some((l) => l.code === locale)) setLocale(null);
-  }, [locales, locale, setLocale]);
-
-  useEffect(() => {
     document.title = currentVersion ? `AviList ${currentVersion.label}` : "AviList";
   }, [currentVersion]);
+
+  const selected = useMemo(
+    () => (selectedId && data ? data.find((s) => s.sciName === selectedId) ?? null : null),
+    [selectedId, data],
+  );
 
   const currentLocale =
     isLatestVersion && locale ? locales?.find((l) => l.code === locale) ?? null : null;
@@ -94,12 +84,12 @@ export function App() {
   const filtered = useMemo(() => (data ? applyFilters(data, filters) : null), [data, filters]);
 
   const handleSelect = (s: Species, scrollTo?: string) => {
-    setSelected(s);
+    setSelectedId(s.sciName ?? null);
     setScrollTarget(scrollTo ?? null);
   };
 
   const handleClosePanel = () => {
-    setSelected(null);
+    setSelectedId(null);
     setScrollTarget(null);
   };
 
@@ -111,9 +101,9 @@ export function App() {
         <a href="https://avilist.org/" aria-label="AviList — The Global Avian Checklist">
           <img src={logo} alt="AviList — The Global Avian Checklist" className="block h-9 w-auto" />
         </a>
-        {manifest && versionId && (
+        {manifest && currentVersion && (
           <div className="ml-auto sm:ml-0">
-            <VersionPicker versions={manifest.versions} current={versionId} onChange={setVersionId} />
+            <VersionPicker versions={manifest.versions} current={currentVersion.id} onChange={setVersionId} />
           </div>
         )}
         <div className="hidden sm:block">
@@ -240,6 +230,7 @@ export function App() {
 
       {currentVersion && (
         <ReferencesSheet
+          key={currentVersion.id}
           open={referencesOpen}
           onOpenChange={setReferencesOpen}
           version={currentVersion}
