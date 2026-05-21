@@ -30,30 +30,30 @@ const SEARCH_FIELDS = [
 
 export type FilterState = {
   search: string;
-  ranks: Set<string>;
-  iucn: Set<string>;
-  orders: Set<string>;
-  families: Set<string>;
-  genera: Set<string>;
+  ranks: string[];
+  iucn: string[];
+  orders: string[];
+  families: string[];
+  genera: string[];
 };
 
 export const emptyFilters: FilterState = {
   search: "",
-  ranks: new Set(),
-  iucn: new Set(),
-  orders: new Set(),
-  families: new Set(),
-  genera: new Set(),
+  ranks: [],
+  iucn: [],
+  orders: [],
+  families: [],
+  genera: [],
 };
 
 export function isFilterActive(f: FilterState): boolean {
   return (
     f.search.trim() !== "" ||
-    f.ranks.size > 0 ||
-    f.iucn.size > 0 ||
-    f.orders.size > 0 ||
-    f.families.size > 0 ||
-    f.genera.size > 0
+    f.ranks.length > 0 ||
+    f.iucn.length > 0 ||
+    f.orders.length > 0 ||
+    f.families.length > 0 ||
+    f.genera.length > 0
   );
 }
 
@@ -113,18 +113,22 @@ export function applyFilters(data: Species[], f: FilterState): Species[] {
   const search = f.search.trim().toLowerCase();
   const result: Species[] = [];
   for (const row of data) {
-    if (f.ranks.size > 0 && (!row.rank || !f.ranks.has(row.rank))) continue;
-    if (f.iucn.size > 0) {
+    if (f.ranks.length > 0 && (!row.rank || !f.ranks.includes(row.rank)))
+      continue;
+    if (f.iucn.length > 0) {
       const base = baseIucnCode(row.iucn);
-      if (!base || !f.iucn.has(base)) continue;
+      if (!base || !f.iucn.includes(base)) continue;
     }
-    if (f.orders.size > 0 && (!row.order || !f.orders.has(row.order)))
+    if (f.orders.length > 0 && (!row.order || !f.orders.includes(row.order)))
       continue;
-    if (f.families.size > 0 && (!row.family || !f.families.has(row.family)))
+    if (
+      f.families.length > 0 &&
+      (!row.family || !f.families.includes(row.family))
+    )
       continue;
-    if (f.genera.size > 0) {
+    if (f.genera.length > 0) {
       const genus = genusOf(row);
-      if (!genus || !f.genera.has(genus)) continue;
+      if (!genus || !f.genera.includes(genus)) continue;
     }
     if (search) {
       let match = false;

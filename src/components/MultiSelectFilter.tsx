@@ -19,8 +19,8 @@ import { cn } from "@/lib/utils";
 type Props = {
   label: string;
   options: string[];
-  selected: Set<string>;
-  onChange: (next: Set<string>) => void;
+  selected: string[];
+  onChange: (next: string[]) => void;
   formatLabel?: (value: string) => ReactNode;
   getKeywords?: (value: string) => string[];
   popoverWidth?: string;
@@ -41,10 +41,11 @@ export function MultiSelectFilter({
   const [search, setSearch] = useState("");
 
   const toggle = (value: string) => {
-    const next = new Set(selected);
-    if (next.has(value)) next.delete(value);
-    else next.add(value);
-    onChange(next);
+    if (selected.includes(value)) {
+      onChange(selected.filter((v) => v !== value));
+    } else {
+      onChange([...selected, value]);
+    }
   };
 
   const q = search.trim().toLowerCase();
@@ -72,9 +73,9 @@ export function MultiSelectFilter({
           className="border-rule bg-surface text-ink-2 hover:border-ink-3 relative inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-[13px] font-medium transition-colors"
         >
           <span>{label}</span>
-          {selected.size > 0 && (
+          {selected.length > 0 && (
             <span className="bg-ink text-bg inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1.5 text-[11px] font-semibold">
-              {selected.size}
+              {selected.length}
             </span>
           )}
           <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
@@ -103,7 +104,7 @@ export function MultiSelectFilter({
             ) : (
               <CommandGroup>
                 {filtered.map((opt) => {
-                  const isSelected = selected.has(opt);
+                  const isSelected = selected.includes(opt);
                   return (
                     <CommandItem
                       key={opt}
@@ -124,18 +125,18 @@ export function MultiSelectFilter({
               </CommandGroup>
             )}
           </CommandList>
-          {selected.size > 0 && (
+          {selected.length > 0 && (
             <>
               <CommandSeparator />
               <CommandGroup>
                 <CommandItem
                   onSelect={() => {
-                    onChange(new Set());
+                    onChange([]);
                     setOpen(false);
                   }}
                   className="justify-center text-center"
                 >
-                  Clear ({selected.size})
+                  Clear ({selected.length})
                 </CommandItem>
               </CommandGroup>
             </>

@@ -64,11 +64,11 @@ export function FilterBar({
   };
 
   const activeFilterCount =
-    filters.ranks.size +
-    filters.orders.size +
-    filters.families.size +
-    filters.genera.size +
-    filters.iucn.size;
+    filters.ranks.length +
+    filters.orders.length +
+    filters.families.length +
+    filters.genera.length +
+    filters.iucn.length;
 
   const controls = (
     <FilterControls filters={filters} facets={facets} update={update} />
