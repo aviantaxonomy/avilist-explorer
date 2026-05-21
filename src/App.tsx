@@ -73,7 +73,7 @@ export function App() {
   }, [currentVersion]);
 
   const selected = useMemo(
-    () => (selectedId && data ? data.find((s) => s.sciName === selectedId) ?? null : null),
+    () => (selectedId && data ? data.find((s) => s.sequence === selectedId) ?? null : null),
     [selectedId, data],
   );
 
@@ -84,7 +84,7 @@ export function App() {
   const filtered = useMemo(() => (data ? applyFilters(data, filters) : null), [data, filters]);
 
   const handleSelect = (s: Species, scrollTo?: string) => {
-    setSelectedId(s.sciName ?? null);
+    setSelectedId(s.sequence ?? null);
     setScrollTarget(scrollTo ?? null);
   };
 
