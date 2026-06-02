@@ -212,11 +212,12 @@ export function App() {
         <DownloadDialog
           open={downloadOpen}
           onOpenChange={setDownloadOpen}
-          version={currentVersion}
           data={data}
           filtered={filtered}
           filtersActive={isFilterActive(filters)}
           columnMap={manifest.columnMap}
+          localeLabel={currentLocale?.name ?? null}
+          localeNames={localeNames}
         />
       )}
 

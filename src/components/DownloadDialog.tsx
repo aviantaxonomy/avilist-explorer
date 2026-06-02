@@ -9,56 +9,44 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { downloadCsv } from "@/lib/csv";
-import { xlsxUrlFor, type Version } from "@/lib/versions";
 import type { Species } from "@/lib/data";
+import type { LocaleNames } from "@/lib/ebird";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  version: Version;
   data: Species[];
   filtered: Species[];
   filtersActive: boolean;
   columnMap?: Record<string, string[]>;
+  localeLabel?: string | null;
+  localeNames?: LocaleNames | null;
 };
 
-type Format = "csv" | "xlsx";
 type Variant = "basic" | "extended";
 type Rows = "filtered" | "full";
-
-function downloadFile(url: string, filename?: string) {
-  const a = document.createElement("a");
-  a.href = url;
-  if (filename) a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-}
 
 export function DownloadDialog({
   open,
   onOpenChange,
-  version,
   data,
   filtered,
   filtersActive,
   columnMap,
+  localeLabel,
+  localeNames,
 }: Props) {
-  const [format, setFormat] = useState<Format>("csv");
   const [variant, setVariant] = useState<Variant>("basic");
   const [rows, setRows] = useState<Rows>("filtered");
 
-  const showRowsOption = format === "csv" && filtersActive;
-
   const handleDownload = () => {
-    if (format === "xlsx") {
-      const url = xlsxUrlFor(version, variant);
-      downloadFile(url);
-    } else {
-      const useFiltered = !showRowsOption || rows === "filtered";
-      const exportRows = useFiltered ? filtered : data;
-      downloadCsv(exportRows, variant, columnMap);
-    }
+    const useFiltered = !filtersActive || rows === "filtered";
+    const exportRows = useFiltered ? filtered : data;
+    const locale =
+      localeLabel && localeNames
+        ? { label: localeLabel, names: localeNames }
+        : undefined;
+    downloadCsv(exportRows, variant, columnMap, locale);
     onOpenChange(false);
   };
 
@@ -70,17 +58,6 @@ export function DownloadDialog({
         </DialogHeader>
 
         <div className="flex flex-col gap-5 py-2">
-          <Field label="Format">
-            <PillGroup
-              value={format}
-              onChange={setFormat}
-              options={[
-                { value: "csv", label: "CSV" },
-                { value: "xlsx", label: "XLSX" },
-              ]}
-            />
-          </Field>
-
           <Field label="Columns">
             <PillGroup
               value={variant}
@@ -92,7 +69,7 @@ export function DownloadDialog({
             />
           </Field>
 
-          {showRowsOption && (
+          {filtersActive && (
             <Field label="Rows">
               <PillGroup
                 value={rows}

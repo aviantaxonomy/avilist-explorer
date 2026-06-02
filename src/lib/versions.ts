@@ -60,13 +60,6 @@ export function referencesPathFor(version: Version): string {
   return `${BASE}data/avilist-${version.id}-references.json`;
 }
 
-export function xlsxUrlFor(
-  version: Version,
-  variant: "basic" | "extended",
-): string {
-  return `${BASE}data/avilist-${version.id}-${variant}.xlsx`;
-}
-
 export function defaultVersion(manifest: VersionsManifest): Version | null {
   return manifest.versions[manifest.versions.length - 1] ?? null;
 }

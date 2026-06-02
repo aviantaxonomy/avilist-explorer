@@ -1,5 +1,8 @@
 import type { Reference, Species } from "./data";
+import type { LocaleNames } from "./ebird";
 import { COLUMNS, type Column } from "@/columns";
+
+export type LocaleColumn = { label: string; names: LocaleNames };
 
 const BASIC_FIELDS: Column[] = [
   "sequence",
@@ -44,13 +47,23 @@ export function downloadCsv(
   rows: Species[],
   variant: CsvVariant,
   columnMap?: Record<string, string[]>,
+  locale?: LocaleColumn,
 ) {
   const fields: Column[] =
     variant === "basic" ? BASIC_FIELDS : ([...COLUMNS] as Column[]);
+  // Alternate-language column sits right after the AviList English name.
+  const localeAt = locale ? fields.indexOf("name") + 1 : -1;
   const headers = fields.map((f) => escape(headerFor(f, columnMap)));
+  if (locale) headers.splice(localeAt, 0, escape(locale.label));
   const lines = [headers.join(",")];
   for (const t of rows) {
-    lines.push(fields.map((f) => escape(t[f])).join(","));
+    const cells = fields.map((f) => escape(t[f]));
+    if (locale) {
+      const localized =
+        t.rank === "species" && t.cornellCode ? locale.names[t.cornellCode] : "";
+      cells.splice(localeAt, 0, escape(localized));
+    }
+    lines.push(cells.join(","));
   }
   // Prepend UTF-8 BOM so Excel auto-detects the encoding. Without it,
   // Windows Excel falls back to its default codepage and mangles accented
