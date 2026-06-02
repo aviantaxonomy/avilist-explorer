@@ -148,19 +148,20 @@ export function SpeciesTable({ data, onSelect, localeCode, localeLabel, localeNa
       size: 200,
       cell: renderText,
     },
-    ...(localeLabel && localeNames
+    ...(localeLabel
       ? [
           {
-            // Encode the locale in the id so TanStack's per-row value cache
-            // (keyed by column id, invalidated only when `data` changes) doesn't
-            // serve stale common names when switching between locales.
-            id: `localeName:${localeCode}`,
+            // Encode the locale (and whether names have loaded) in the id so
+            // TanStack's per-row value cache — keyed by column id, busted only
+            // when `data` changes — doesn't serve stale values: undefined cached
+            // while names load, or another locale's names after switching.
+            id: `localeName:${localeCode}${localeNames ? "" : ":loading"}`,
             header: localeLabel,
             size: 200,
             accessorFn: (row: Species) => {
               if (row.rank !== "species") return undefined;
               const code = row.cornellCode;
-              return code ? localeNames[code] : undefined;
+              return code ? localeNames?.[code] : undefined;
             },
             cell: renderText,
           } as ColumnDef<Species>,
