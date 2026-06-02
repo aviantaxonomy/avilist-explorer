@@ -1,9 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { COLUMNS } from "../src/columns.ts";
 
-const AVILIST_JSON = "public/data/avilist-2025.06.json";
-const EBIRD_API =
-  "https://api.ebird.org/v2/ref/taxonomy/ebird?fmt=json&cat=species";
+const AVILIST_JSON = "public/data/avilist-2025b.json";
+const EBIRD_API = "https://api.ebird.org/v2/ref/taxonomy/ebird?fmt=json&cat=species";
 
 type EbirdTaxon = {
   speciesCode: string;
@@ -37,9 +36,7 @@ async function main() {
   const codes = await fetchEbirdSpeciesCodes();
 
   console.log(`Reading ${AVILIST_JSON}…`);
-  const rows: (string | null)[][] = JSON.parse(
-    await readFile(AVILIST_JSON, "utf8"),
-  );
+  const rows: (string | null)[][] = JSON.parse(await readFile(AVILIST_JSON, "utf8"));
 
   type Row = { sciName: string; name: string; code: string };
   const unmatched: Row[] = [];

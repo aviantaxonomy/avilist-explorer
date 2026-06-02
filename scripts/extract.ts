@@ -16,9 +16,11 @@ type Version = {
   label: string;
   released: string;
   extendedXlsx: string;
-  basicXlsx: string;
+  basicXlsx: string | null;
   sheet: string;
   referencesSheet?: string;
+  clementsVersion?: string;
+  birdLifeVersion?: string;
 };
 
 type Reference = {
@@ -32,6 +34,23 @@ type Manifest = {
   columnMap?: Record<string, string[]>;
   versions: Version[];
 };
+
+// Substitute {field} placeholders in a columnMap alias with values from the
+// version entry. Lets a column name track its per-revision version suffix
+// declaratively — e.g. "English_name_Clements_{clementsVersion}" resolves to
+// "English_name_Clements_v2025" without editing columnMap each release.
+function interpolate(alias: string, version: Version): string {
+  return alias.replace(/\{(\w+)\}/g, (_, key) => {
+    const value = (version as Record<string, unknown>)[key];
+    if (value == null) {
+      throw new Error(
+        `columnMap alias "${alias}" references version field "${key}", ` +
+          `which is missing from version "${version.id}"`,
+      );
+    }
+    return String(value);
+  });
+}
 
 function escapeHtml(s: string): string {
   return s
@@ -117,7 +136,8 @@ async function processVersion(
   for (const field of canonical) {
     const candidates = columnMap[field] ?? [field];
     let col: number | null = null;
-    for (const name of candidates) {
+    for (const alias of candidates) {
+      const name = interpolate(alias, version);
       const idx = xlsxIndex.get(name);
       if (idx != null) {
         col = idx;
@@ -171,9 +191,11 @@ async function processVersion(
   // Copy the source xlsx files into public/data/ so they're servable as
   // download assets.
   const extendedDest = `public/data/avilist-${version.id}-extended.xlsx`;
-  const basicDest = `public/data/avilist-${version.id}-basic.xlsx`;
   await copyFile(version.extendedXlsx, extendedDest);
-  await copyFile(version.basicXlsx, basicDest);
+  if (version.basicXlsx) {
+    const basicDest = `public/data/avilist-${version.id}-basic.xlsx`;
+    await copyFile(version.basicXlsx, basicDest);
+  }
   console.log(`  Copied xlsx files to public/data/`);
 
   await processReferences(wb, version);
