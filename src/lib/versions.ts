@@ -15,14 +15,14 @@ export type Version = {
 };
 
 /**
- * Format a single proposal number with the version's prefix.
- * Nomenclatural Advisory Group items keep their `N-` prefix and the year
- * slides in between: `N-70` → `N-2025-70`. Regular: `117` → `2025-117`.
+ * Format a single proposal number with the version's prefix, e.g. `117` →
+ * `2025-117`, `N-70` → `N-2025-70`. Idempotent if the year is already present.
  */
 export function formatProposalNumber(version: Version, num: string): string {
   const prefix = version.decisionSummaryPrefix;
   const trimmed = num.trim();
   if (!prefix) return trimmed;
+  if (trimmed.startsWith(prefix)) return trimmed;
   if (/^N-/i.test(trimmed)) return `N-${prefix}-${trimmed.slice(2)}`;
   return `${prefix}-${trimmed}`;
 }
