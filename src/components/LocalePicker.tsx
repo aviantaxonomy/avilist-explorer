@@ -7,6 +7,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
 } from "@/components/ui/command";
 import {
   Popover,
@@ -103,6 +104,22 @@ export function LocalePicker({ locales, current, loading, disabled, onChange }: 
               ))}
             </CommandGroup>
           </CommandList>
+          {current && (
+            <>
+              <CommandSeparator />
+              <CommandGroup>
+                <CommandItem
+                  onSelect={() => {
+                    onChange(null);
+                    setOpen(false);
+                  }}
+                  className="justify-center text-center"
+                >
+                  Reset
+                </CommandItem>
+              </CommandGroup>
+            </>
+          )}
         </Command>
       </PopoverContent>
     </Popover>
