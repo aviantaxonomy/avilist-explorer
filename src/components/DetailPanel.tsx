@@ -98,8 +98,6 @@ export function DetailPanel({
     rank === "species" && localeNames && displayed.cornellCode
       ? localeNames[displayed.cornellCode]
       : undefined;
-  // Only surface the locale name when it actually differs from the English name
-  // shown above it (e.g. the "en" locale repeats it verbatim).
   const localeName =
     localeLabel && rawLocaleName && rawLocaleName !== english
       ? rawLocaleName

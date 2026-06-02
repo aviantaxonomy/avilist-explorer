@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import {
   Command,
@@ -31,6 +31,20 @@ export function LocalePicker({ locales, current, loading, disabled, onChange }: 
   const selected = current ? locales?.find((l) => l.code === current) : null;
   const label = selected ? selected.name : DEFAULT_LABEL;
   const isDisabled = disabled || !locales;
+  // cmdk highlights and scrolls to the item whose value matches this.
+  const activeValue = selected ? `${selected.name} ${selected.code}` : DEFAULT_LABEL;
+
+  // cmdk scrolls with block:"nearest"; re-center the active item on open.
+  const contentRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open || !current) return;
+    const raf = requestAnimationFrame(() => {
+      contentRef.current
+        ?.querySelector('[cmdk-item=""][aria-selected="true"]')
+        ?.scrollIntoView({ block: "center" });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [open, current]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -58,8 +72,8 @@ export function LocalePicker({ locales, current, loading, disabled, onChange }: 
           </svg>
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-72 p-0" align="start">
-        <Command>
+      <PopoverContent ref={contentRef} className="w-72 p-0" align="start">
+        <Command defaultValue={activeValue}>
           <CommandInput placeholder="Search languages…" />
           <CommandList>
             <CommandEmpty>No language found.</CommandEmpty>

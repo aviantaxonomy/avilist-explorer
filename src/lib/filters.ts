@@ -130,9 +130,7 @@ export function applyFilters(
       if (!genus || !f.genera.includes(genus)) continue;
     }
     if (search) {
-      // The locale common name lives in a separate lookup keyed by cornellCode
-      // rather than on the row, but it's a peer search field: the || chain
-      // short-circuits on the first hit, same early-exit as every other field.
+      // Locale name isn't on the row — it's looked up by cornellCode.
       const localeName =
         localeNames && row.cornellCode ? localeNames[row.cornellCode] : undefined;
       if (
