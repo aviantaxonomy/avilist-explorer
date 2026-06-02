@@ -83,9 +83,13 @@ export function App() {
 
   const currentLocale =
     isLatestVersion && locale ? locales?.find((l) => l.code === locale) ?? null : null;
+  const localeNames = isLatestVersion ? localeQuery.data ?? null : null;
 
   const facets = useMemo(() => (data ? computeFacets(data) : null), [data]);
-  const filtered = useMemo(() => (data ? applyFilters(data, filters) : null), [data, filters]);
+  const filtered = useMemo(
+    () => (data ? applyFilters(data, filters, localeNames) : null),
+    [data, filters, localeNames],
+  );
 
   const handleSelect = (s: Species, scrollTo?: string) => {
     setSelectedId(s.sequence ?? null);
@@ -242,14 +246,22 @@ export function App() {
           <SpeciesTable
             data={filtered}
             onSelect={handleSelect}
+            localeCode={isLatestVersion ? locale : null}
             localeLabel={currentLocale?.name ?? null}
-            localeNames={isLatestVersion ? localeQuery.data ?? null : null}
+            localeNames={localeNames}
           />
         </>
       )}
 
       {currentVersion && (
-        <DetailPanel taxon={selected} version={currentVersion} scrollTo={scrollTarget} onClose={handleClosePanel} />
+        <DetailPanel
+          taxon={selected}
+          version={currentVersion}
+          localeLabel={currentLocale?.name ?? null}
+          localeNames={localeNames}
+          scrollTo={scrollTarget}
+          onClose={handleClosePanel}
+        />
       )}
 
       {currentVersion && (

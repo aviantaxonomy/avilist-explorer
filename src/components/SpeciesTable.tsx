@@ -110,11 +110,12 @@ const renderText = (info: CellContext<Species, unknown>) => {
 type Props = {
   data: Species[];
   onSelect: (s: Species, scrollTo?: string) => void;
+  localeCode?: string | null;
   localeLabel?: string | null;
   localeNames?: LocaleNames | null;
 };
 
-export function SpeciesTable({ data, onSelect, localeLabel, localeNames }: Props) {
+export function SpeciesTable({ data, onSelect, localeCode, localeLabel, localeNames }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([
     { id: "sequence", desc: false },
@@ -150,7 +151,10 @@ export function SpeciesTable({ data, onSelect, localeLabel, localeNames }: Props
     ...(localeLabel && localeNames
       ? [
           {
-            id: "localeName",
+            // Encode the locale in the id so TanStack's per-row value cache
+            // (keyed by column id, invalidated only when `data` changes) doesn't
+            // serve stale common names when switching between locales.
+            id: `localeName:${localeCode}`,
             header: localeLabel,
             size: 200,
             accessorFn: (row: Species) => {

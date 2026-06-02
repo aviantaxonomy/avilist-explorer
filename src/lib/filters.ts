@@ -1,4 +1,5 @@
 import type { Species } from "./data";
+import type { LocaleNames } from "./ebird";
 import { baseIucnCode } from "./iucn";
 
 export const RANK_OPTIONS = [
@@ -19,13 +20,6 @@ export const IUCN_OPTIONS = [
   "EX",
   "DD",
   "NE",
-] as const;
-
-const SEARCH_FIELDS = [
-  "sciName",
-  "name",
-  "nameClements",
-  "nameBirdLife",
 ] as const;
 
 export type FilterState = {
@@ -108,9 +102,14 @@ export function computeFacets(data: Species[]): Facets {
   };
 }
 
-export function applyFilters(data: Species[], f: FilterState): Species[] {
+export function applyFilters(
+  data: Species[],
+  f: FilterState,
+  localeNames?: LocaleNames | null,
+): Species[] {
   if (!isFilterActive(f)) return data;
   const search = f.search.trim().toLowerCase();
+  const has = (v?: string) => !!v && v.toLowerCase().includes(search);
   const result: Species[] = [];
   for (const row of data) {
     if (f.ranks.length > 0 && (!row.rank || !f.ranks.includes(row.rank)))
@@ -131,15 +130,19 @@ export function applyFilters(data: Species[], f: FilterState): Species[] {
       if (!genus || !f.genera.includes(genus)) continue;
     }
     if (search) {
-      let match = false;
-      for (const field of SEARCH_FIELDS) {
-        const v = row[field];
-        if (v && v.toLowerCase().includes(search)) {
-          match = true;
-          break;
-        }
-      }
-      if (!match) continue;
+      // The locale common name lives in a separate lookup keyed by cornellCode
+      // rather than on the row, but it's a peer search field: the || chain
+      // short-circuits on the first hit, same early-exit as every other field.
+      const localeName =
+        localeNames && row.cornellCode ? localeNames[row.cornellCode] : undefined;
+      if (
+        !has(row.sciName) &&
+        !has(row.name) &&
+        !has(row.nameClements) &&
+        !has(row.nameBirdLife) &&
+        !has(localeName)
+      )
+        continue;
     }
     result.push(row);
   }
