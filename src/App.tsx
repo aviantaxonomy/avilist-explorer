@@ -13,6 +13,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { loadSpecies, type Species } from "@/lib/data";
@@ -102,11 +106,11 @@ export function App() {
           <img src={logo} alt="AviList — The Global Avian Checklist" className="block h-9 w-auto" />
         </a>
         {manifest && currentVersion && (
-          <div className="ml-auto sm:ml-0">
+          <div className="hidden sm:block">
             <VersionPicker versions={manifest.versions} current={currentVersion.id} onChange={setVersionId} />
           </div>
         )}
-        <div className="hidden sm:block">
+        <div className="ml-auto sm:ml-0">
           <LocalePicker
             locales={locales ?? null}
             current={isLatestVersion ? locale : null}
@@ -143,6 +147,26 @@ export function App() {
               <MoreVertical className="h-4 w-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" sideOffset={8} className="min-w-56 p-1.5">
+              {manifest && currentVersion && (
+                <div className="sm:hidden">
+                  <DropdownMenuLabel className="px-2.5">Version</DropdownMenuLabel>
+                  <DropdownMenuRadioGroup
+                    value={currentVersion.id}
+                    onValueChange={setVersionId}
+                  >
+                    {manifest.versions.map((v) => (
+                      <DropdownMenuRadioItem
+                        key={v.id}
+                        value={v.id}
+                        className="py-1.5 pl-2.5"
+                      >
+                        {v.label}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                  <DropdownMenuSeparator />
+                </div>
+              )}
               <DropdownMenuItem
                 onSelect={() => setDownloadOpen(true)}
                 disabled={!filtered}
