@@ -32,14 +32,12 @@
       "id": "2025b",
       "label": "v2025b",
       "released": "11 Jun 2026",
-      "extendedXlsx": "public/AviList-v2025b-30May2026-extended.xlsx",
-      "basicXlsx": null,
+      "extendedXlsx": "xlsx/AviList-v2025b-1Jun2026-extended-ExpCol_mji.xlsx",
       "sheet": "AviList v2025b extended",
       "clementsVersion": "v2025",
       "birdLifeVersion": "v10",
-      "decisionSummaryPrefix": "2025",
-      "citation": "AviList Core Team. 2025. AviList: The Global Avian Checklist, v2025. https://doi.org/10.2173/avilist.v2025",
-      "license": "AviList: The Global Avian Checklist © 2025 by AviList Core Team is licensed under CC BY 4.0",
+      "citation": "AviList Core Team. 2026. AviList: The Global Avian Checklist, v2025b. https://doi.org/10.2173/avilist.v2025b",
+      "license": "AviList: The Global Avian Checklist © 2026 by AviList Core Team is licensed under CC BY 4.0",
       "contributors": "Les Christidis, Frank E. Rheindt, Marshall J. Iliff, Denis Lepage, Pamela C. Rasmussen, Paul Donald, Per Alström, Juan Ignacio Areta, Frederik Brammer, Terry Chesser, David Donsker, Bob Dowsett, Jeffrey Gerbracht, Max Kirsch, Marek Kuziemko, Markus Lagerqvist, Richard Littauer, Wayne Longmore, Janette Norman, Alan Peterson, Richard Schodde, Tom Schulenberg, Martin Stervander"
     }
   ]

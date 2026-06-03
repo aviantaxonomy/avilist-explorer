@@ -8,11 +8,7 @@ import {
   IUCN_BAR_ORDER,
   IUCN_INFO,
 } from "@/lib/iucn";
-import {
-  formatProposalNumber,
-  parseProposalNumbers,
-  type Version,
-} from "@/lib/versions";
+import { parseProposalNumbers, type Version } from "@/lib/versions";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Dialog as SheetPrimitive, VisuallyHidden } from "radix-ui";
 
@@ -235,9 +231,7 @@ export function DetailPanel({
                 Decision Summary
                 {displayed.proposalNumber && (
                   <span className="text-ink-3 ml-2 font-mono text-[11px] tracking-normal normal-case">
-                    {parseProposalNumbers(displayed.proposalNumber)
-                      .map((n) => formatProposalNumber(version, n))
-                      .join(", ")}
+                    {parseProposalNumbers(displayed.proposalNumber).join(", ")}
                   </span>
                 )}
               </div>

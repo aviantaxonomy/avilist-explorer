@@ -1,11 +1,5 @@
 import ExcelJS from "exceljs";
-import {
-  copyFile,
-  mkdir,
-  readFile,
-  stat,
-  writeFile,
-} from "node:fs/promises";
+import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { COLUMNS } from "../src/columns.ts";
 
@@ -16,7 +10,6 @@ type Version = {
   label: string;
   released: string;
   extendedXlsx: string;
-  basicXlsx: string | null;
   sheet: string;
   referencesSheet?: string;
   clementsVersion?: string;
@@ -153,13 +146,18 @@ async function processVersion(
     );
   }
 
-  // Walk data rows; produce arrays in canonical order.
+  // Walk data rows; produce arrays in canonical order. Real taxa always have a
+  // numeric Sequence, so any other row (the field-name header, plus the display-
+  // label header some editions add below it) is skipped.
+  const seqCol = resolved.find((r) => r.canonical === "sequence")?.xlsxCol ?? 1;
+
   const compact: (string | null)[][] = [];
   let cellCount = 0;
   let richCount = 0;
 
   for (let r = 2; r <= sheet.rowCount; r++) {
     const xlsxRow = sheet.getRow(r);
+    if (!/^\d+$/.test(xlsxRow.getCell(seqCol).text.trim())) continue;
     const out: (string | null)[] = new Array(canonical.length).fill(null);
     let hasAny = false;
     for (let i = 0; i < resolved.length; i++) {
@@ -187,16 +185,6 @@ async function processVersion(
 
   const { size } = await stat(outPath);
   console.log(`  Wrote ${outPath} (${(size / 1024 / 1024).toFixed(2)} MB)`);
-
-  // Copy the source xlsx files into public/data/ so they're servable as
-  // download assets.
-  const extendedDest = `public/data/avilist-${version.id}-extended.xlsx`;
-  await copyFile(version.extendedXlsx, extendedDest);
-  if (version.basicXlsx) {
-    const basicDest = `public/data/avilist-${version.id}-basic.xlsx`;
-    await copyFile(version.basicXlsx, basicDest);
-  }
-  console.log(`  Copied xlsx files to public/data/`);
 
   await processReferences(wb, version);
 }
