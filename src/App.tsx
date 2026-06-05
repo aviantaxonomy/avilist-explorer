@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, MoreVertical, BookOpen, Quote, Download, Info } from "lucide-react";
+import { Loader2, MoreVertical, BookOpen, Quote, Download, Info, Languages } from "lucide-react";
 import { SpeciesTable } from "@/components/SpeciesTable";
 import { FilterBar } from "@/components/FilterBar";
 import { DetailPanel } from "@/components/DetailPanel";
@@ -9,6 +9,7 @@ import { LocalePicker } from "@/components/LocalePicker";
 import { DownloadDialog } from "@/components/DownloadDialog";
 import { ReferencesSheet } from "@/components/ReferencesSheet";
 import { CitationSheet } from "@/components/CitationSheet";
+import { CommonNamesSheet } from "@/components/CommonNamesSheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,6 +45,7 @@ export function App() {
   const [downloadOpen, setDownloadOpen] = useState(false);
   const [referencesOpen, setReferencesOpen] = useState(false);
   const [citationOpen, setCitationOpen] = useState(false);
+  const [commonNamesOpen, setCommonNamesOpen] = useState(false);
 
   const currentVersion = manifest
     ? (versionId && manifest.versions.find((v) => v.id === versionId)) ||
@@ -193,6 +195,13 @@ export function App() {
                 <BookOpen />
                 References
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => setCommonNamesOpen(true)}
+                className="gap-2 px-2.5 py-1.5"
+              >
+                <Languages />
+                About common names
+              </DropdownMenuItem>
               <DropdownMenuItem asChild className="gap-2 px-2.5 py-1.5">
                 <a
                   href="https://www.avilist.org/about/"
@@ -273,6 +282,11 @@ export function App() {
           version={currentVersion}
         />
       )}
+
+      <CommonNamesSheet
+        open={commonNamesOpen}
+        onOpenChange={setCommonNamesOpen}
+      />
 
       {currentVersion && (
         <CitationSheet
