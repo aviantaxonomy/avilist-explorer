@@ -177,7 +177,10 @@ function ReferencesList({
 }
 
 function ReferenceRow({ ref_ }: { ref_: Reference }) {
-  const link = ref_.doi ?? ref_.url;
+  const links = [
+    ref_.doi && { href: ref_.doi, label: "DOI" },
+    ref_.url && { href: ref_.url, label: "View Article" },
+  ].filter(Boolean) as { href: string; label: string }[];
   return (
     <div className="border-rule border-b py-4">
       <div
@@ -188,16 +191,21 @@ function ReferenceRow({ ref_ }: { ref_: Reference }) {
         className="text-ink-2 mt-1 text-[13px] leading-relaxed"
         dangerouslySetInnerHTML={{ __html: ref_.full }}
       />
-      {link && (
-        <a
-          href={link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-ink-2 hover:text-ink mt-1.5 inline-flex items-center gap-1 text-xs"
-        >
-          {ref_.doi ? "DOI" : "Link"}
-          <ExternalLink className="h-3 w-3" />
-        </a>
+      {links.length > 0 && (
+        <div className="mt-1.5 flex items-center gap-3">
+          {links.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-ink-2 hover:text-ink inline-flex items-center gap-1 text-xs"
+            >
+              {link.label}
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          ))}
+        </div>
       )}
     </div>
   );

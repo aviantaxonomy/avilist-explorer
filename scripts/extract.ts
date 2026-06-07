@@ -200,16 +200,17 @@ async function processReferences(
     return;
   }
 
+  const norm = (s: string) => s.trim().toLowerCase().replace(/[\s_]+/g, "_");
   const headerIndex = new Map<string, number>();
   sheet.getRow(1).eachCell({ includeEmpty: false }, (cell, col) => {
     const name = cell.text;
-    if (name && !headerIndex.has(name)) headerIndex.set(name, col);
+    if (name && !headerIndex.has(norm(name))) headerIndex.set(norm(name), col);
   });
 
-  const shortCol = headerIndex.get("Short_reference");
-  const fullCol = headerIndex.get("Full_reference");
-  const urlCol = headerIndex.get("URL");
-  const doiCol = headerIndex.get("DOI");
+  const shortCol = headerIndex.get("short_reference");
+  const fullCol = headerIndex.get("full_reference");
+  const urlCol = headerIndex.get("url");
+  const doiCol = headerIndex.get("doi");
   if (shortCol == null || fullCol == null) {
     console.warn(
       `  ⚠️  References sheet missing Short_reference / Full_reference — skipping`,
