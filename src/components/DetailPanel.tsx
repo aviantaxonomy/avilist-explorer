@@ -1,23 +1,22 @@
 import { useEffect, useState } from "react";
 import { ExternalLink } from "lucide-react";
 import type { Species } from "@/lib/data";
+import type { LocaleNames } from "@/lib/ebird";
 import {
   baseIucnCode,
   iucnQualifier,
   IUCN_BAR_ORDER,
   IUCN_INFO,
 } from "@/lib/iucn";
-import {
-  formatProposalNumber,
-  parseProposalNumbers,
-  type Version,
-} from "@/lib/versions";
+import { parseProposalNumbers, type Version } from "@/lib/versions";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Dialog as SheetPrimitive, VisuallyHidden } from "radix-ui";
 
 type Props = {
   taxon: Species | null;
   version: Version;
+  localeLabel?: string | null;
+  localeNames?: LocaleNames | null;
   scrollTo?: string | null;
   onClose: () => void;
 };
@@ -60,13 +59,18 @@ const SECTION_LABEL =
 const META_LABEL =
   "text-ink-3 text-[11px] font-semibold uppercase tracking-wider";
 
-export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
+export function DetailPanel({
+  taxon,
+  version,
+  localeLabel,
+  localeNames,
+  scrollTo,
+  onClose,
+}: Props) {
   // Hold onto the last non-null taxon so the close animation can still render
   // its content while Radix unmounts.
   const [displayed, setDisplayed] = useState<Species | null>(taxon);
-  useEffect(() => {
-    if (taxon) setDisplayed(taxon);
-  }, [taxon]);
+  if (taxon && taxon !== displayed) setDisplayed(taxon);
 
   useEffect(() => {
     if (!scrollTo || !taxon) return;
@@ -85,6 +89,15 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
   const iucnLabel =
     info && qualifier ? `${info.label} (${qualifier})` : info?.label;
   const english = displayed.name ?? displayed.nameClements ?? displayed.nameBirdLife;
+
+  const rawLocaleName =
+    rank === "species" && localeNames && displayed.cornellCode
+      ? localeNames[displayed.cornellCode]
+      : undefined;
+  const localeName =
+    localeLabel && rawLocaleName && rawLocaleName !== english
+      ? rawLocaleName
+      : undefined;
 
   const altNames: { source: string; name: string }[] = [];
   if (displayed.nameClements && displayed.nameClements !== displayed.name) {
@@ -144,6 +157,9 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
             <h2 className="mt-3.5 mb-1.5 text-[32px] font-medium leading-[1.1] tracking-[-0.01em]">
               {english}
             </h2>
+            {localeName && (
+              <div className="text-ink mb-2 text-lg">{localeName}</div>
+            )}
             <div className="text-ink-2 mb-7 text-lg">
               <span
                 className={`font-fraunces ${isItalicRank(rank) ? "italic" : ""}`}
@@ -215,9 +231,7 @@ export function DetailPanel({ taxon, version, scrollTo, onClose }: Props) {
                 Decision Summary
                 {displayed.proposalNumber && (
                   <span className="text-ink-3 ml-2 font-mono text-[11px] tracking-normal normal-case">
-                    {parseProposalNumbers(displayed.proposalNumber)
-                      .map((n) => formatProposalNumber(version, n))
-                      .join(", ")}
+                    {parseProposalNumbers(displayed.proposalNumber).join(", ")}
                   </span>
                 )}
               </div>

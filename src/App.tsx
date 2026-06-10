@@ -1,99 +1,109 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, MoreVertical, BookOpen, Quote, Download, Info } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Loader2, MoreVertical, BookOpen, Quote, Download, Info, Languages } from "lucide-react";
 import { SpeciesTable } from "@/components/SpeciesTable";
 import { FilterBar } from "@/components/FilterBar";
 import { DetailPanel } from "@/components/DetailPanel";
 import { VersionPicker } from "@/components/VersionPicker";
+import { LocalePicker } from "@/components/LocalePicker";
 import { DownloadDialog } from "@/components/DownloadDialog";
 import { ReferencesSheet } from "@/components/ReferencesSheet";
 import { CitationSheet } from "@/components/CitationSheet";
+import { CommonNamesSheet } from "@/components/CommonNamesSheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { loadReferences, loadSpecies, type Reference, type Species } from "@/lib/data";
-import { applyFilters, computeFacets, emptyFilters, isFilterActive, type FilterState } from "@/lib/filters";
-import { dataPathFor, defaultVersion, loadVersions, referencesPathFor, type VersionsManifest } from "@/lib/versions";
+import { loadSpecies, type Species } from "@/lib/data";
+import { applyFilters, computeFacets, isFilterActive } from "@/lib/filters";
+import { fetchLocaleNames, fetchLocales } from "@/lib/ebird";
+import { dataPathFor, defaultVersion, loadVersions } from "@/lib/versions";
+import { usePrefs } from "@/lib/store";
 import logo from "@/assets/logo.webp";
 
-const STORAGE_KEY = "avilist:version";
-
 export function App() {
-  const [manifest, setManifest] = useState<VersionsManifest | null>(null);
-  const [versionId, setVersionId] = useState<string | null>(null);
-  const [data, setData] = useState<Species[] | null>(null);
-  const [references, setReferences] = useState<Reference[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<FilterState>(emptyFilters);
-  const [selected, setSelected] = useState<Species | null>(null);
+  const { data: manifest, error: manifestError } = useQuery({
+    queryKey: ["versions"],
+    queryFn: loadVersions,
+    staleTime: Infinity,
+  });
+  const versionId = usePrefs((s) => s.versionId);
+  const setVersionId = usePrefs((s) => s.setVersionId);
+  const locale = usePrefs((s) => s.locale);
+  const setLocale = usePrefs((s) => s.setLocale);
+  const filters = usePrefs((s) => s.filters);
+  const setFilters = usePrefs((s) => s.setFilters);
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [scrollTarget, setScrollTarget] = useState<string | null>(null);
   const [downloadOpen, setDownloadOpen] = useState(false);
   const [referencesOpen, setReferencesOpen] = useState(false);
   const [citationOpen, setCitationOpen] = useState(false);
+  const [commonNamesOpen, setCommonNamesOpen] = useState(false);
 
-  const handleSelect = (s: Species, scrollTo?: string) => {
-    setSelected(s);
-    setScrollTarget(scrollTo ?? null);
-  };
+  const currentVersion = manifest
+    ? (versionId && manifest.versions.find((v) => v.id === versionId)) ||
+      defaultVersion(manifest) ||
+      null
+    : null;
 
-  const handleClosePanel = () => {
-    setSelected(null);
-    setScrollTarget(null);
-  };
+  const isLatestVersion = !!manifest && currentVersion?.id === defaultVersion(manifest)?.id;
 
-  useEffect(() => {
-    loadVersions().then(
-      (m) => {
-        setManifest(m);
-        const stored = localStorage.getItem(STORAGE_KEY);
-        const valid = stored && m.versions.some((v) => v.id === stored);
-        setVersionId(valid ? stored : defaultVersion(m)?.id ?? null);
-      },
-      (e) => setError(String(e))
-    );
-  }, []);
+  const { data, error: speciesError } = useQuery({
+    queryKey: ["species", currentVersion?.id],
+    queryFn: () => loadSpecies(dataPathFor(currentVersion!)),
+    enabled: !!currentVersion,
+    staleTime: Infinity,
+  });
 
-  const currentVersion = useMemo(() => {
-    if (!manifest || !versionId) return null;
-    return manifest.versions.find((v) => v.id === versionId) ?? null;
-  }, [manifest, versionId]);
-
-  useEffect(() => {
-    if (!currentVersion) return;
-    setData(null);
-    setReferences(null);
-    setSelected(null);
-    loadSpecies(dataPathFor(currentVersion)).then(setData, (e) => setError(String(e)));
-  }, [currentVersion]);
-
-  // Prefetch references in the background after the main species data has
-  // loaded, so opening the References sheet feels instant.
-  useEffect(() => {
-    if (!currentVersion || !data) return;
-    let cancelled = false;
-    loadReferences(referencesPathFor(currentVersion)).then(
-      (r) => !cancelled && setReferences(r),
-      // Swallow errors — sheet will fall back to its own loading state.
-      () => {},
-    );
-    return () => {
-      cancelled = true;
-    };
-  }, [currentVersion, data]);
+  const { data: locales } = useQuery({
+    queryKey: ["ebird", "locales"],
+    queryFn: fetchLocales,
+    staleTime: 1000 * 60 * 60 * 24,
+  });
+  const localeQuery = useQuery({
+    queryKey: ["ebird", "names", locale],
+    queryFn: () => fetchLocaleNames(locale!),
+    enabled: !!locale,
+    staleTime: 1000 * 60 * 60 * 24,
+  });
 
   useEffect(() => {
     document.title = currentVersion ? `AviList ${currentVersion.label}` : "AviList";
   }, [currentVersion]);
 
-  const facets = useMemo(() => (data ? computeFacets(data) : null), [data]);
-  const filtered = useMemo(() => (data ? applyFilters(data, filters) : null), [data, filters]);
+  const selected = useMemo(
+    () => (selectedId && data ? data.find((s) => s.sequence === selectedId) ?? null : null),
+    [selectedId, data],
+  );
 
-  const handleVersionChange = (id: string) => {
-    localStorage.setItem(STORAGE_KEY, id);
-    setVersionId(id);
+  const currentLocale =
+    isLatestVersion && locale ? locales?.find((l) => l.code === locale) ?? null : null;
+  const localeNames = isLatestVersion ? localeQuery.data ?? null : null;
+
+  const facets = useMemo(() => (data ? computeFacets(data) : null), [data]);
+  const filtered = useMemo(
+    () => (data ? applyFilters(data, filters, localeNames) : null),
+    [data, filters, localeNames],
+  );
+
+  const handleSelect = (s: Species, scrollTo?: string) => {
+    setSelectedId(s.sequence ?? null);
+    setScrollTarget(scrollTo ?? null);
   };
+
+  const handleClosePanel = () => {
+    setSelectedId(null);
+    setScrollTarget(null);
+  };
+
+  const error = manifestError ?? speciesError;
 
   return (
     <div className="bg-bg text-ink font-sans flex h-screen flex-col overflow-hidden">
@@ -101,11 +111,20 @@ export function App() {
         <a href="https://avilist.org/" aria-label="AviList — The Global Avian Checklist">
           <img src={logo} alt="AviList — The Global Avian Checklist" className="block h-9 w-auto" />
         </a>
-        {manifest && versionId && (
-          <div className="ml-auto sm:ml-0">
-            <VersionPicker versions={manifest.versions} current={versionId} onChange={handleVersionChange} />
+        {manifest && currentVersion && (
+          <div className="hidden sm:block">
+            <VersionPicker versions={manifest.versions} current={currentVersion.id} onChange={setVersionId} />
           </div>
         )}
+        <div className="ml-auto sm:ml-0">
+          <LocalePicker
+            locales={locales ?? null}
+            current={isLatestVersion ? locale : null}
+            loading={localeQuery.isFetching}
+            disabled={!isLatestVersion}
+            onChange={setLocale}
+          />
+        </div>
         <div className="flex items-center gap-2 sm:ml-auto">
           <button
             type="button"
@@ -124,7 +143,7 @@ export function App() {
             >
               <path d="M8 1v9M4 7l4 4 4-4M2 14h12" />
             </svg>
-            Download
+            Export
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -134,13 +153,33 @@ export function App() {
               <MoreVertical className="h-4 w-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" sideOffset={8} className="min-w-56 p-1.5">
+              {manifest && currentVersion && (
+                <div className="sm:hidden">
+                  <DropdownMenuLabel className="px-2.5">Version</DropdownMenuLabel>
+                  <DropdownMenuRadioGroup
+                    value={currentVersion.id}
+                    onValueChange={setVersionId}
+                  >
+                    {manifest.versions.map((v) => (
+                      <DropdownMenuRadioItem
+                        key={v.id}
+                        value={v.id}
+                        className="py-1.5 pl-2.5"
+                      >
+                        {v.label}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                  <DropdownMenuSeparator />
+                </div>
+              )}
               <DropdownMenuItem
                 onSelect={() => setDownloadOpen(true)}
                 disabled={!filtered}
                 className="gap-2 px-2.5 py-1.5 sm:hidden"
               >
                 <Download />
-                Download
+                Export
               </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() => setCitationOpen(true)}
@@ -155,6 +194,13 @@ export function App() {
               >
                 <BookOpen />
                 References
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => setCommonNamesOpen(true)}
+                className="gap-2 px-2.5 py-1.5"
+              >
+                <Languages />
+                About common names
               </DropdownMenuItem>
               <DropdownMenuItem asChild className="gap-2 px-2.5 py-1.5">
                 <a
@@ -175,15 +221,16 @@ export function App() {
         <DownloadDialog
           open={downloadOpen}
           onOpenChange={setDownloadOpen}
-          version={currentVersion}
           data={data}
           filtered={filtered}
           filtersActive={isFilterActive(filters)}
           columnMap={manifest.columnMap}
+          localeLabel={currentLocale?.name ?? null}
+          localeNames={localeNames}
         />
       )}
 
-      {error && <div className="text-accent-2 p-8">{error}</div>}
+      {error && <div className="text-accent-2 p-8">{String(error)}</div>}
       {!data && !error && (
         <div className="flex flex-1 items-center justify-center">
           <div className="text-ink-3 flex flex-col items-center gap-3">
@@ -206,22 +253,40 @@ export function App() {
               </>
             }
           />
-          <SpeciesTable data={filtered} onSelect={handleSelect} />
+          <SpeciesTable
+            data={filtered}
+            onSelect={handleSelect}
+            localeCode={isLatestVersion ? locale : null}
+            localeLabel={currentLocale?.name ?? null}
+            localeNames={localeNames}
+          />
         </>
       )}
 
       {currentVersion && (
-        <DetailPanel taxon={selected} version={currentVersion} scrollTo={scrollTarget} onClose={handleClosePanel} />
+        <DetailPanel
+          taxon={selected}
+          version={currentVersion}
+          localeLabel={currentLocale?.name ?? null}
+          localeNames={localeNames}
+          scrollTo={scrollTarget}
+          onClose={handleClosePanel}
+        />
       )}
 
       {currentVersion && (
         <ReferencesSheet
+          key={currentVersion.id}
           open={referencesOpen}
           onOpenChange={setReferencesOpen}
           version={currentVersion}
-          references={references}
         />
       )}
+
+      <CommonNamesSheet
+        open={commonNamesOpen}
+        onOpenChange={setCommonNamesOpen}
+      />
 
       {currentVersion && (
         <CitationSheet

@@ -35,7 +35,7 @@ The dev server runs at `http://localhost:5173/`. Data is loaded from the latest 
 
 ## Adding a new AviList version
 
-1. Drop the new xlsx into `xlsx/`, e.g. `xlsx/AviList-v2026-XXJan-extended.xlsx`.
+1. Drop the new xlsx into `public/data/`, e.g. `public/data/avilist-2026-extended.xlsx`.
 2. Open `public/versions.json` and append an entry to the `versions` array (most recent goes last — the picker defaults to the last entry):
 
    ```json
@@ -43,7 +43,7 @@ The dev server runs at `http://localhost:5173/`. Data is loaded from the latest 
      "id": "2026.01",
      "label": "v2026.01",
      "released": "15 Jan 2026",
-     "inputXlsx": "xlsx/AviList-v2026-XXJan-extended.xlsx",
+     "inputXlsx": "public/data/avilist-2026-extended.xlsx",
      "sheet": "AviList v2026 extended",
      "clementsVersion": "v2024",
      "birdLifeVersion": "v9"
@@ -58,22 +58,19 @@ The dev server runs at `http://localhost:5173/`. Data is loaded from the latest 
 
    The extractor uses the first match found, so leaving the old name in keeps prior versions working.
 
+   Aliases may contain `{field}` placeholders, substituted from the version entry at extract time. This is how the Clements/BirdLife English-name columns track their per-revision version suffix without editing `columnMap` each release — `"English_name_Clements_{clementsVersion}"` resolves to `English_name_Clements_v2025` when that version's `clementsVersion` is `"v2025"`. Just keep `clementsVersion`/`birdLifeVersion` accurate in the version entry.
+
 4. Run the extractor:
 
    ```
    npm run extract
    ```
 
-5. Commit the new xlsx, the manifest update, and the generated data file together:
-
-   ```
-   git add xlsx/AviList-v2026-XXJan-extended.xlsx public/versions.json public/data/avilist-2026.01.json.gz
-   git commit -m "Add v2026.01"
-   ```
+5. Commit the new xlsx and generated json files.
 
 6. Push and redeploy. The version picker in the header shows the new entry. No code changes required.
 
-The xlsx files live under `xlsx/` and are committed to git so the source data is reproducible. The generated `*.json.gz` is what actually ships to the client.
+The xlsx files live under `public/data/` and are committed to git so the source data is reproducible. The generated `*.json.gz` is what actually ships to the client.
 
 ## Adding a new column
 

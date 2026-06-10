@@ -1,11 +1,5 @@
 import ExcelJS from "exceljs";
-import {
-  copyFile,
-  mkdir,
-  readFile,
-  stat,
-  writeFile,
-} from "node:fs/promises";
+import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { COLUMNS } from "../src/columns.ts";
 
@@ -16,9 +10,10 @@ type Version = {
   label: string;
   released: string;
   extendedXlsx: string;
-  basicXlsx: string;
   sheet: string;
   referencesSheet?: string;
+  clementsVersion?: string;
+  birdLifeVersion?: string;
 };
 
 type Reference = {
@@ -32,6 +27,23 @@ type Manifest = {
   columnMap?: Record<string, string[]>;
   versions: Version[];
 };
+
+// Substitute {field} placeholders in a columnMap alias with values from the
+// version entry. Lets a column name track its per-revision version suffix
+// declaratively — e.g. "English_name_Clements_{clementsVersion}" resolves to
+// "English_name_Clements_v2025" without editing columnMap each release.
+function interpolate(alias: string, version: Version): string {
+  return alias.replace(/\{(\w+)\}/g, (_, key) => {
+    const value = (version as Record<string, unknown>)[key];
+    if (value == null) {
+      throw new Error(
+        `columnMap alias "${alias}" references version field "${key}", ` +
+          `which is missing from version "${version.id}"`,
+      );
+    }
+    return String(value);
+  });
+}
 
 function escapeHtml(s: string): string {
   return s
@@ -117,7 +129,8 @@ async function processVersion(
   for (const field of canonical) {
     const candidates = columnMap[field] ?? [field];
     let col: number | null = null;
-    for (const name of candidates) {
+    for (const alias of candidates) {
+      const name = interpolate(alias, version);
       const idx = xlsxIndex.get(name);
       if (idx != null) {
         col = idx;
@@ -133,13 +146,18 @@ async function processVersion(
     );
   }
 
-  // Walk data rows; produce arrays in canonical order.
+  // Walk data rows; produce arrays in canonical order. Real taxa always have a
+  // numeric Sequence, so any other row (the field-name header, plus the display-
+  // label header some editions add below it) is skipped.
+  const seqCol = resolved.find((r) => r.canonical === "sequence")?.xlsxCol ?? 1;
+
   const compact: (string | null)[][] = [];
   let cellCount = 0;
   let richCount = 0;
 
   for (let r = 2; r <= sheet.rowCount; r++) {
     const xlsxRow = sheet.getRow(r);
+    if (!/^\d+$/.test(xlsxRow.getCell(seqCol).text.trim())) continue;
     const out: (string | null)[] = new Array(canonical.length).fill(null);
     let hasAny = false;
     for (let i = 0; i < resolved.length; i++) {
@@ -168,14 +186,6 @@ async function processVersion(
   const { size } = await stat(outPath);
   console.log(`  Wrote ${outPath} (${(size / 1024 / 1024).toFixed(2)} MB)`);
 
-  // Copy the source xlsx files into public/data/ so they're servable as
-  // download assets.
-  const extendedDest = `public/data/avilist-${version.id}-extended.xlsx`;
-  const basicDest = `public/data/avilist-${version.id}-basic.xlsx`;
-  await copyFile(version.extendedXlsx, extendedDest);
-  await copyFile(version.basicXlsx, basicDest);
-  console.log(`  Copied xlsx files to public/data/`);
-
   await processReferences(wb, version);
 }
 
@@ -190,16 +200,33 @@ async function processReferences(
     return;
   }
 
-  const headerIndex = new Map<string, number>();
-  sheet.getRow(1).eachCell({ includeEmpty: false }, (cell, col) => {
-    const name = cell.text;
-    if (name && !headerIndex.has(name)) headerIndex.set(name, col);
-  });
+  const norm = (s: string) => s.trim().toLowerCase().replace(/[\s_]+/g, "_");
 
-  const shortCol = headerIndex.get("Short_reference");
-  const fullCol = headerIndex.get("Full_reference");
-  const urlCol = headerIndex.get("URL");
-  const doiCol = headerIndex.get("DOI");
+  let headerRow = 0;
+  let shortCol: number | undefined;
+  let fullCol: number | undefined;
+  let urlCol: number | undefined;
+  let doiCol: number | undefined;
+  const maxScan = Math.min(sheet.rowCount, 10);
+  for (let r = 1; r <= maxScan; r++) {
+    const headerIndex = new Map<string, number>();
+    sheet.getRow(r).eachCell({ includeEmpty: false }, (cell, col) => {
+      const name = cell.text;
+      if (name && !headerIndex.has(norm(name))) headerIndex.set(norm(name), col);
+    });
+    if (
+      headerIndex.has("short_reference") &&
+      headerIndex.has("full_reference")
+    ) {
+      headerRow = r;
+      shortCol = headerIndex.get("short_reference");
+      fullCol = headerIndex.get("full_reference");
+      urlCol = headerIndex.get("url");
+      doiCol = headerIndex.get("doi");
+      break;
+    }
+  }
+
   if (shortCol == null || fullCol == null) {
     console.warn(
       `  ⚠️  References sheet missing Short_reference / Full_reference — skipping`,
@@ -208,7 +235,7 @@ async function processReferences(
   }
 
   const refs: Reference[] = [];
-  for (let r = 2; r <= sheet.rowCount; r++) {
+  for (let r = headerRow + 1; r <= sheet.rowCount; r++) {
     const row = sheet.getRow(r);
     const short = cellValue(row.getCell(shortCol));
     const full = cellValue(row.getCell(fullCol));

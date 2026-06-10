@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SlidersHorizontal } from "lucide-react";
 import { MultiSelectFilter } from "./MultiSelectFilter";
 import {
@@ -37,20 +37,24 @@ export function FilterBar({
   resultsLabel,
   resultsCount,
 }: Props) {
-  const [searchValue, setSearchValue] = useState(filters.search);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  // Reverse-sync when parent clears (e.g. "Clear all" button)
+  // Local state so typing doesn't re-render the whole app; debounced to the store below.
+  const [searchValue, setSearchValue] = useState(filters.search);
+  const lastSentRef = useRef(filters.search);
+
+  // Sync external changes (e.g. Reset) back into the input, but skip the echo of
+  // our own debounced write — otherwise it overwrites characters typed since.
   useEffect(() => {
+    if (filters.search === lastSentRef.current) return;
+    lastSentRef.current = filters.search;
     setSearchValue(filters.search);
   }, [filters.search]);
 
-  // Debounce local input → parent filter state.
-  // `filters` is a dep so a mid-debounce facet change (Rank/Order/Family/IUCN)
-  // re-schedules the timer with the latest filters and isn't dropped.
   useEffect(() => {
     if (searchValue === filters.search) return;
     const t = setTimeout(() => {
+      lastSentRef.current = searchValue;
       onChange({ ...filters, search: searchValue });
     }, SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(t);
@@ -64,11 +68,11 @@ export function FilterBar({
   };
 
   const activeFilterCount =
-    filters.ranks.size +
-    filters.orders.size +
-    filters.families.size +
-    filters.genera.size +
-    filters.iucn.size;
+    filters.ranks.length +
+    filters.orders.length +
+    filters.families.length +
+    filters.genera.length +
+    filters.iucn.length;
 
   const controls = (
     <FilterControls filters={filters} facets={facets} update={update} />

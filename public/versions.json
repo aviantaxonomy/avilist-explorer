@@ -9,8 +9,8 @@
     "authority": ["Authority"],
     "citation": ["Bibliographic_details"],
     "name": ["English_name_AviList"],
-    "nameClements": ["English_name_Clements_v2024"],
-    "nameBirdLife": ["English_name_BirdLife_v9"],
+    "nameClements": ["English_name_Clements_{clementsVersion}"],
+    "nameBirdLife": ["English_name_BirdLife_{birdLifeVersion}"],
     "proposalNumber": ["Proposal_number"],
     "decisionSummary": ["Decision_summary"],
     "range": ["Range"],
@@ -29,17 +29,15 @@
   },
   "versions": [
     {
-      "id": "2025.06",
-      "label": "v2025.06",
-      "released": "11 Jun 2025",
-      "extendedXlsx": "xlsx/AviList-v2025-11Jun-extended.xlsx",
-      "basicXlsx": "xlsx/AviList-v2025-11Jun-short.xlsx",
-      "sheet": "AviList v2025 extended",
-      "clementsVersion": "v2024",
-      "birdLifeVersion": "v9",
-      "decisionSummaryPrefix": "2025",
-      "citation": "AviList Core Team. 2025. AviList: The Global Avian Checklist, v2025. https://doi.org/10.2173/avilist.v2025",
-      "license": "AviList: The Global Avian Checklist © 2025 by AviList Core Team is licensed under CC BY 4.0",
+      "id": "2025b",
+      "label": "v2025b",
+      "released": "11 Jun 2026",
+      "extendedXlsx": "xlsx/AviList-v2025b-10Jun2026-extended.xlsx",
+      "sheet": "AviList v2025b extended",
+      "clementsVersion": "v2025",
+      "birdLifeVersion": "v10",
+      "citation": "AviList Core Team. 2026. AviList: The Global Avian Checklist, v2025b. https://doi.org/10.2173/avilist.v2025b",
+      "license": "AviList: The Global Avian Checklist © 2026 by AviList Core Team is licensed under CC BY 4.0",
       "contributors": "Les Christidis, Frank E. Rheindt, Marshall J. Iliff, Denis Lepage, Pamela C. Rasmussen, Paul Donald, Per Alström, Juan Ignacio Areta, Frederik Brammer, Terry Chesser, David Donsker, Bob Dowsett, Jeffrey Gerbracht, Max Kirsch, Marek Kuziemko, Markus Lagerqvist, Richard Littauer, Wayne Longmore, Janette Norman, Alan Peterson, Richard Schodde, Tom Schulenberg, Martin Stervander"
     }
   ]
