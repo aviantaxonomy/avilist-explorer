@@ -201,16 +201,32 @@ async function processReferences(
   }
 
   const norm = (s: string) => s.trim().toLowerCase().replace(/[\s_]+/g, "_");
-  const headerIndex = new Map<string, number>();
-  sheet.getRow(1).eachCell({ includeEmpty: false }, (cell, col) => {
-    const name = cell.text;
-    if (name && !headerIndex.has(norm(name))) headerIndex.set(norm(name), col);
-  });
 
-  const shortCol = headerIndex.get("short_reference");
-  const fullCol = headerIndex.get("full_reference");
-  const urlCol = headerIndex.get("url");
-  const doiCol = headerIndex.get("doi");
+  let headerRow = 0;
+  let shortCol: number | undefined;
+  let fullCol: number | undefined;
+  let urlCol: number | undefined;
+  let doiCol: number | undefined;
+  const maxScan = Math.min(sheet.rowCount, 10);
+  for (let r = 1; r <= maxScan; r++) {
+    const headerIndex = new Map<string, number>();
+    sheet.getRow(r).eachCell({ includeEmpty: false }, (cell, col) => {
+      const name = cell.text;
+      if (name && !headerIndex.has(norm(name))) headerIndex.set(norm(name), col);
+    });
+    if (
+      headerIndex.has("short_reference") &&
+      headerIndex.has("full_reference")
+    ) {
+      headerRow = r;
+      shortCol = headerIndex.get("short_reference");
+      fullCol = headerIndex.get("full_reference");
+      urlCol = headerIndex.get("url");
+      doiCol = headerIndex.get("doi");
+      break;
+    }
+  }
+
   if (shortCol == null || fullCol == null) {
     console.warn(
       `  ⚠️  References sheet missing Short_reference / Full_reference — skipping`,
@@ -219,7 +235,7 @@ async function processReferences(
   }
 
   const refs: Reference[] = [];
-  for (let r = 2; r <= sheet.rowCount; r++) {
+  for (let r = headerRow + 1; r <= sheet.rowCount; r++) {
     const row = sheet.getRow(r);
     const short = cellValue(row.getCell(shortCol));
     const full = cellValue(row.getCell(fullCol));
