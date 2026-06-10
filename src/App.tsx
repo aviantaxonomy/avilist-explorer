@@ -143,7 +143,7 @@ export function App() {
             >
               <path d="M8 1v9M4 7l4 4 4-4M2 14h12" />
             </svg>
-            Download
+            Export
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -179,7 +179,7 @@ export function App() {
                 className="gap-2 px-2.5 py-1.5 sm:hidden"
               >
                 <Download />
-                Download
+                Export
               </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() => setCitationOpen(true)}
