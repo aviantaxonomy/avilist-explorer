@@ -52,7 +52,7 @@ export function VersionPicker({ versions, current, onChange }: Props) {
         <Command>
           <CommandList>
             <CommandGroup>
-              {versions.map((v) => {
+              {[...versions].reverse().map((v) => {
                 const active = v.id === current;
                 return (
                   <CommandItem
