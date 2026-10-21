@@ -45,6 +45,10 @@ function interpolate(alias: string, version: Version): string {
   });
 }
 
+function normHeader(s: string): string {
+  return s.trim().toLowerCase().replace(/[\s_]+/g, " ");
+}
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
@@ -114,32 +118,40 @@ async function processVersion(
     );
   }
 
-  // Build xlsx-name → column-index from header row
-  const xlsxIndex = new Map<string, number>();
-  sheet.getRow(1).eachCell({ includeEmpty: false }, (cell, col) => {
-    const name = cell.text;
-    if (name && !xlsxIndex.has(name)) xlsxIndex.set(name, col);
-  });
-
   // Resolve each canonical field to its xlsx column index (or null if missing).
   // For each field: try the columnMap aliases in order; fall back to the
   // canonical name itself.
-  const resolved: { canonical: string; xlsxCol: number | null }[] = [];
-  const missing: string[] = [];
-  for (const field of canonical) {
-    const candidates = columnMap[field] ?? [field];
-    let col: number | null = null;
-    for (const alias of candidates) {
-      const name = interpolate(alias, version);
-      const idx = xlsxIndex.get(name);
-      if (idx != null) {
-        col = idx;
-        break;
+  const resolveHeader = (headerRow: number) => {
+    const xlsxIndex = new Map<string, number>();
+    sheet.getRow(headerRow).eachCell({ includeEmpty: false }, (cell, col) => {
+      const name = normHeader(cell.text);
+      if (name && !xlsxIndex.has(name)) xlsxIndex.set(name, col);
+    });
+    const resolved: { canonical: string; xlsxCol: number | null }[] = [];
+    const missing: string[] = [];
+    for (const field of canonical) {
+      const candidates = columnMap[field] ?? [field];
+      let col: number | null = null;
+      for (const alias of candidates) {
+        const idx = xlsxIndex.get(normHeader(interpolate(alias, version)));
+        if (idx != null) {
+          col = idx;
+          break;
+        }
       }
+      resolved.push({ canonical: field, xlsxCol: col });
+      if (col == null) missing.push(field);
     }
-    resolved.push({ canonical: field, xlsxCol: col });
-    if (col == null) missing.push(field);
+    return { resolved, missing };
+  };
+
+  // Header row varies by edition; pick the best match.
+  let best = resolveHeader(1);
+  for (let r = 2; r <= Math.min(sheet.rowCount, 5); r++) {
+    const candidate = resolveHeader(r);
+    if (candidate.missing.length < best.missing.length) best = candidate;
   }
+  const { resolved, missing } = best;
   if (missing.length > 0) {
     console.warn(
       `  ⚠️  ${missing.length} canonical field(s) not found in xlsx — will be null in output: ${missing.join(", ")}`,
@@ -172,6 +184,22 @@ async function processVersion(
       if (/<(em|strong|u|s)>/.test(val)) richCount++;
     }
     if (hasAny) compact.push(out);
+  }
+
+  // v2026+ has no family English name column; take it from family rows.
+  const idx = (c: string) => canonical.indexOf(c);
+  if (missing.includes("familyEn")) {
+    const famEn = new Map<string, string>();
+    for (const row of compact) {
+      const family = row[idx("family")];
+      const name = row[idx("name")];
+      if (row[idx("rank")] === "family" && family && name) famEn.set(family, name);
+    }
+    for (const row of compact) {
+      const family = row[idx("family")];
+      if (family && famEn.has(family)) row[idx("familyEn")] = famEn.get(family)!;
+    }
+    console.log(`  Derived familyEn for ${famEn.size} families from family rows`);
   }
 
   console.log(
