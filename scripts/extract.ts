@@ -149,7 +149,7 @@ async function processVersion(
   const { resolved, missing } = best;
   if (missing.length > 0) {
     console.warn(
-      `  ⚠️  ${missing.length} canonical field(s) not found in xlsx — will be null in output: ${missing.join(", ")}`,
+      `  Warning: ${missing.length} field(s) not found in xlsx, will be null: ${missing.join(", ")}`,
     );
   }
 
@@ -217,7 +217,7 @@ async function processReferences(
   const sheetName = version.referencesSheet ?? "References";
   const sheet = wb.getWorksheet(sheetName);
   if (!sheet) {
-    console.warn(`  ⚠️  References sheet "${sheetName}" not found — skipping`);
+    console.warn(`  Warning: References sheet "${sheetName}" not found, skipping`);
     return;
   }
 
@@ -250,7 +250,7 @@ async function processReferences(
 
   if (shortCol == null || fullCol == null) {
     console.warn(
-      `  ⚠️  References sheet missing Short_reference / Full_reference — skipping`,
+      `  Warning: References sheet missing Short_reference / Full_reference, skipping`,
     );
     return;
   }
