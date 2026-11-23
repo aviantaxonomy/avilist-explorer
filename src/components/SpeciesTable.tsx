@@ -151,10 +151,8 @@ export function SpeciesTable({ data, onSelect, localeCode, localeLabel, localeNa
     ...(localeLabel
       ? [
           {
-            // Encode the locale (and whether names have loaded) in the id so
-            // TanStack's per-row value cache — keyed by column id, busted only
-            // when `data` changes — doesn't serve stale values: undefined cached
-            // while names load, or another locale's names after switching.
+            // TanStack caches row values by column id, so the id has to change
+            // with the locale and when names finish loading
             id: `localeName:${localeCode}${localeNames ? "" : ":loading"}`,
             header: localeLabel,
             size: 200,

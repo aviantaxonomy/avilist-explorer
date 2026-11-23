@@ -1,5 +1,3 @@
-/* museum.css — design tokens (as Tailwind utilities) + targeted globals */
-
 @theme {
   --color-bg: #fbfaf6;
   --color-surface: #ffffff;
@@ -7,7 +5,7 @@
   --color-ink-2: #44443e;
   --color-ink-3: #8a8a82;
   --color-rule: #e8e6dc;
-  --color-forest: #1a4d3a; /* renamed from --color-accent — collided with shadcn */
+  --color-forest: #1a4d3a;
   --color-accent-2: #c83e1f;
   --color-warm: #f5f1e6;
   --color-selected: #fff7e0;
@@ -21,9 +19,7 @@ body {
   font-feature-settings: "ss01";
 }
 
-/* === Rank-badge palette ===
-   Driven by body[data-rankpalette]; class names live on the badge element.
-   Base styling is via Tailwind utilities at the call site. */
+/* Rank badges */
 body[data-rankpalette="ornitho"] .rank-badge-order {
   background: #2b3a1f;
   color: #f3efe6;
@@ -51,7 +47,7 @@ body[data-rankpalette="ornitho"] .rank-badge-subspecies {
   border-style: dashed;
 }
 
-/* === Shadcn primitive overrides (target internals not reachable via props) === */
+/* shadcn overrides */
 [data-slot="command-input-wrapper"] [data-slot="input-group"] {
   background: var(--color-bg) !important;
   border-color: var(--color-rule) !important;
@@ -64,10 +60,7 @@ body[data-rankpalette="ornitho"] .rank-badge-subspecies {
   color: var(--color-ink) !important;
 }
 
-/* === HTML prose rendering for Decision_summary (output is generated, not authored as JSX) ===
-   `em` uses the body's native italic (Inter italic) rather than swapping in
-   Fraunces — keeps x-height and word spacing consistent so italicised Latin
-   names don't crash into adjacent words. */
+/* Decision summary HTML */
 .prose-museum em {
   font-style: italic;
 }

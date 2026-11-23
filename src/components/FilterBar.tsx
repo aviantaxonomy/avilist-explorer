@@ -80,8 +80,6 @@ export function FilterBar({
 
   return (
     <div className="bg-surface border-rule flex flex-col gap-3 border-b px-4 py-[14px] sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 sm:py-[18px] sm:px-8">
-      {/* Search + mobile filter trigger. `sm:contents` unwraps this on desktop
-          so the search label flows alongside the chip row in the outer flex. */}
       <div className="flex items-center gap-2 sm:contents">
         <label className="border-rule bg-bg text-ink-3 hover:border-ink-3 focus-within:border-ink-3 flex h-10 min-w-0 flex-1 items-center gap-2 rounded-full border px-3 transition-colors sm:gap-2.5 sm:px-3.5 sm:max-w-[520px] sm:min-w-[320px] sm:flex-1">
           <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" className="shrink-0">
