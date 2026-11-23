@@ -336,8 +336,6 @@ export function DetailPanel({
                   )}
                   {displayed.authority && (
                     <div className="text-ink-3 mt-1 text-xs">
-                      {/* Brackets only apply to names AFTER the protonym
-                          (combinatio nova) — never to the original. */}
                       {displayed.authority.replace(/^\((.*)\)$/, "$1")}
                     </div>
                   )}

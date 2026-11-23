@@ -17,11 +17,6 @@ const BASIC_FIELDS: Column[] = [
 
 export type CsvVariant = "basic" | "extended";
 
-/**
- * Resolve the export header for a canonical field. By convention,
- * `columnMap[field][0]` is the canonical xlsx name and what we use as the
- * CSV column header. Falls back to the canonical name itself.
- */
 function headerFor(field: Column, columnMap?: Record<string, string[]>) {
   return columnMap?.[field]?.[0] ?? field;
 }

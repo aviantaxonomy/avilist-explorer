@@ -58,9 +58,6 @@ export type Facets = {
   genera: string[];
 };
 
-// Genus is the first whitespace-delimited token of sciName for any taxon at
-// or below the genus rank. Higher ranks (order/family) have non-genus sciNames
-// and are excluded.
 function genusOf(row: Species): string | null {
   if (
     row.rank !== "genus" &&

@@ -1,9 +1,5 @@
-// Canonical column order — index in this array IS the positional index
-// in the compact JSON output (avilist-<id>.json.gz). Hand-maintained.
-//
-// To add or rename a field: update this array AND, if the xlsx column name
-// differs, add an entry in public/versions.json `columnMap` so the converter
-// knows where to read it from.
+// Order matters: the index here is the position in each row of the compact JSON.
+// New fields also need a columnMap entry in public/versions.json.
 
 export const COLUMNS = [
   "sequence",

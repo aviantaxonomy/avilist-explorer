@@ -28,10 +28,7 @@ type Manifest = {
   versions: Version[];
 };
 
-// Substitute {field} placeholders in a columnMap alias with values from the
-// version entry. Lets a column name track its per-revision version suffix
-// declaratively — e.g. "English_name_Clements_{clementsVersion}" resolves to
-// "English_name_Clements_v2025" without editing columnMap each release.
+// Fill {field} placeholders in a columnMap alias from the version entry
 function interpolate(alias: string, version: Version): string {
   return alias.replace(/\{(\w+)\}/g, (_, key) => {
     const value = (version as Record<string, unknown>)[key];
@@ -118,9 +115,7 @@ async function processVersion(
     );
   }
 
-  // Resolve each canonical field to its xlsx column index (or null if missing).
-  // For each field: try the columnMap aliases in order; fall back to the
-  // canonical name itself.
+  // Try the columnMap aliases in order, then the canonical name itself
   const resolveHeader = (headerRow: number) => {
     const xlsxIndex = new Map<string, number>();
     sheet.getRow(headerRow).eachCell({ includeEmpty: false }, (cell, col) => {
@@ -158,9 +153,7 @@ async function processVersion(
     );
   }
 
-  // Walk data rows; produce arrays in canonical order. Real taxa always have a
-  // numeric Sequence, so any other row (the field-name header, plus the display-
-  // label header some editions add below it) is skipped.
+  // Only rows with a numeric sequence are taxa, the rest are header rows
   const seqCol = resolved.find((r) => r.canonical === "sequence")?.xlsxCol ?? 1;
 
   const compact: (string | null)[][] = [];

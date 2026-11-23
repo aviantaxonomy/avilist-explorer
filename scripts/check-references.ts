@@ -9,8 +9,7 @@ type Version = { id: string; label: string };
 type Manifest = { versions: Version[] };
 type Reference = { short: string; full: string; url?: string; doi?: string };
 
-// Common English / Latin words that begin a sentence with a capital letter
-// and would otherwise be mistaken for an author surname before a year.
+// Capitalized sentence starters that look like an author surname before a year
 const TRAP_WORDS = new Set([
   "A", "An", "The", "In", "On", "At", "By", "For", "From", "Of", "To", "With",
   "However", "Although", "Though", "Whereas", "Recently", "Recent", "Currently",
@@ -22,25 +21,12 @@ const TRAP_WORDS = new Set([
   "Decision", "Resolution", "Order", "Family", "Genus", "Species", "Subspecies",
 ]);
 
-// Author token. Components:
-//   • Optional contraction prefix: a lowercase letter + apostrophe glued onto
-//     the surname (d'Horta, O'Brien — though O'Brien also works without it).
-//   • Mandatory uppercase letter followed by letters/marks.
-//   • Optional internal hyphen/apostrophe segments (Sosa-López, Rodríguez-Gómez).
+// Allows prefixes like d'Horta and hyphenated surnames
 const NAME = String.raw`(?:[a-z]['’])?[\p{Lu}][\p{L}\p{M}]*(?:[\-'’][\p{L}\p{M}]+)*`;
-// Lowercase particles allowed before a name (van, de, del, …). Chained
-// particles like "van der" are supported by the `*` quantifier on AUTHOR.
 const PARTICLE = String.raw`(?:de|del|della|den|der|du|la|le|van|von|zu|da|dos|das|do)`;
 const AUTHOR = String.raw`(?:${PARTICLE}\s+)*${NAME}(?:\s+${NAME})*`;
-// Year: 4-digit, 1700–2030, optional letter suffix (e.g. "2003a").
+// 1700-2030 with optional letter suffix (2003a)
 const YEAR = String.raw`(?:1[7-9]\d{2}|20[0-2]\d|2030)[a-z]?`;
-// Full citation match. Use Unicode-aware lookarounds instead of \b.
-//
-// Three flavors are accepted between the first author and the year:
-//   • "Smith YEAR"
-//   • "Smith & Jones YEAR" / "Smith and Jones YEAR"
-//   • "Smith et al. YEAR" — note that "et al." is NOT followed by another
-//     author, unlike the conjunction case.
 const CITE_RE = new RegExp(
   String.raw`(?<![\p{L}\p{M}])` +
     `(${AUTHOR})` +
@@ -50,16 +36,6 @@ const CITE_RE = new RegExp(
   "gu",
 );
 
-/**
- * Normalize for matching: NFC, then unify various punctuation that the data
- * uses inconsistently. Decisions made here:
- *   - Curly/modifier apostrophes → straight ('). Decision summaries and the
- *     References sheet disagree on which form to use.
- *   - All Unicode hyphens / non-breaking hyphens / minus → ASCII hyphen-minus.
- *   - " and " between authors → " & " (the bibliography canonicalizes on `&`).
- *   - Collapse whitespace and remove the optional space after a particle so
- *     "da Silva" matches "daSilva" (bibliography uses both forms).
- */
 function normalize(s: string): string {
   return s
     .normalize("NFC")
@@ -70,11 +46,6 @@ function normalize(s: string): string {
     .trim();
 }
 
-/**
- * Variant of `normalize` that further collapses optional whitespace inside
- * particle-prefixed surnames ("da Silva" ↔ "daSilva"). Used as a fallback when
- * the strict normalized form misses.
- */
 function looseNormalize(s: string): string {
   return normalize(s).replace(
     /\b(de|del|della|den|der|du|la|le|van|von|zu|da|dos|das|do)\s+(\p{Lu})/giu,
@@ -82,7 +53,6 @@ function looseNormalize(s: string): string {
   );
 }
 
-/** Strip combining marks for diacritic-insensitive matching. */
 function stripDiacritics(s: string): string {
   return s.normalize("NFD").replace(/\p{M}+/gu, "");
 }
@@ -91,23 +61,12 @@ function deburrNormalize(s: string): string {
   return stripDiacritics(normalize(s)).toLowerCase();
 }
 
-/**
- * Classify the citation form: "solo" = "Smith 2020", "etal" = "Smith et al.
- * 2020", "amp" = "Smith & Jones 2020". Used to avoid fuzzy-matching across
- * different citation shapes (e.g. "Scott et al. 2022" should never resolve
- * to a single-author "Scott 2022").
- */
 function citationShape(norm: string): "solo" | "etal" | "amp" {
   if (/\bet al\.\s+\d{4}/.test(norm)) return "etal";
   if (/\s(?:&|and)\s/.test(norm)) return "amp";
   return "solo";
 }
 
-/**
- * Pull the leading-author surname out of a normalized citation, peeling off
- * trailing year, "et al.", and "& Other Author" so we have the actual
- * surname rather than fragments like "al." or "Jones".
- */
 function leadingSurname(norm: string): string {
   const stripped = norm
     .replace(/\s+\d{4}[a-z]?$/, "")
@@ -129,9 +88,6 @@ function stripHtml(s: string): string {
 }
 
 function isLikelyFalsePositive(firstToken: string): boolean {
-  // The first token is the first capitalized word of the matched span. If
-  // it's a common English word, the match is almost certainly a sentence
-  // start, not a real citation.
   return TRAP_WORDS.has(firstToken);
 }
 
@@ -140,10 +96,10 @@ async function loadJson<T>(path: string): Promise<T> {
 }
 
 type CitationHit = {
-  raw: string;            // the full matched span as it appears in text
-  normalized: string;     // normalized form for lookup
-  taxon: string;          // "rank sciName" of the species this came from
-  context: string;        // ±40 char window around the match
+  raw: string;
+  normalized: string;
+  taxon: string;
+  context: string;
 };
 
 type UnknownCategory =
@@ -182,14 +138,10 @@ async function checkVersion(version: Version): Promise<void> {
   const rankIdx = COLUMNS.indexOf("rank");
   const sciIdx = COLUMNS.indexOf("sciName");
 
-  // Build the lookup indexes. Multiple keys per reference handle the various
-  // ways a citation in the wild can deviate from the canonical short form.
   const refByNormalized = new Map<string, Reference>();
   const refByLoose = new Map<string, Reference>();
   const refByDeburr = new Map<string, Reference>();
-  // Without the year suffix letter — "Smith et al. 2023a" → "Smith et al. 2023".
-  // Stores all matching refs; if there's exactly one, we can resolve a bare
-  // "Smith et al. 2023" to it. If there are several (a, b, …) we don't.
+  // "Smith et al. 2023a" keyed as "Smith et al. 2023"
   const refsByYearStem = new Map<string, Reference[]>();
   const refsByConnectiveSuffix = new Map<string, Reference[]>();
   for (const r of refs) {
@@ -205,8 +157,6 @@ async function checkVersion(version: Version): Promise<void> {
       bucket.push(r);
     }
 
-    // Capture suffix following "& " or "al. " — that's the canonical cutoff
-    // a clipped regex would land on.
     const m = n.match(/(?:&|al\.)\s+(.+\s+\d{4}[a-z]?)$/);
     if (m) {
       const sfx = m[1];
@@ -216,10 +166,9 @@ async function checkVersion(version: Version): Promise<void> {
     }
   }
 
-  // Walk every decision summary, collecting hits.
   let totalSummaries = 0;
   let totalMatches = 0;
-  const knownHits = new Map<string, number>(); // ref.short → occurrence count
+  const knownHits = new Map<string, number>();
   const unknownHits = new Map<string, CitationHit[]>();
 
   for (const row of compact) {
@@ -235,16 +184,12 @@ async function checkVersion(version: Version): Promise<void> {
       const norm = normalize(raw);
       const loose = looseNormalize(raw);
       const deburr = deburrNormalize(raw);
-      // Resolution attempts, in order of strictness. The deburr fallback only
-      // kicks in for refs that lack diacritic-only siblings.
       let ref =
         refByNormalized.get(norm) ??
         refByLoose.get(loose) ??
         refByDeburr.get(deburr);
 
-      // Year-suffix tolerance: a summary writing "Smith et al. 2023" should
-      // match a sole bibliography entry "Smith et al. 2023a", but only if
-      // there's no ambiguity (no 2023b/c/… alongside it).
+      // A bare year matches a suffixed entry only if there is exactly one
       if (!ref) {
         const stemBucket = refsByYearStem.get(norm);
         if (stemBucket && stemBucket.length === 1) ref = stemBucket[0];
@@ -263,7 +208,6 @@ async function checkVersion(version: Version): Promise<void> {
     }
   }
 
-  // Categorize unknowns.
   const categorized: CategorizedUnknown[] = [];
   for (const [norm, hits] of unknownHits) {
     const sample = hits[0];
@@ -274,17 +218,12 @@ async function checkVersion(version: Version): Promise<void> {
     if (isLikelyFalsePositive(firstToken)) {
       category = "false_positive";
     } else if (refsByConnectiveSuffix.get(norm)?.length) {
-      // Regex-clipped: the unknown matches the tail of a multi-author ref,
-      // following "&" or "et al.". Covers cases where a Unicode word boundary
-      // failed and we captured only the trailing author.
       const cand = refsByConnectiveSuffix
         .get(norm)!
         .find((r) => normalize(r.short) !== norm);
       category = "regex_clipped";
       closestKnown = cand?.short;
     } else if ((refsByYearStem.get(norm)?.length ?? 0) >= 2) {
-      // Ambiguous year suffix: bibliography has 2023a AND 2023b, but the
-      // summary writes a bare 2023.
       category = "ambiguous_year";
       closestKnown = refsByYearStem
         .get(norm)!
@@ -292,11 +231,7 @@ async function checkVersion(version: Version): Promise<void> {
         .join(" / ");
     } else {
       let nearMatch: Reference | undefined;
-      // Suffix match first: the bibliography entry ends with the unknown
-      // after a space — e.g. "Ó Marcaigh et al. 2023" ends with " Marcaigh
-      // et al. 2023". Catches dropped leading particles ("Earl of Cranbrook"
-      // → "Cranbrook", "Marques Almeida" → "Almeida") cleanly without fuzzy
-      // matching.
+      // Dropped leading name parts, e.g. "Marques Almeida" cited as "Almeida"
       for (const r of refs) {
         const rn = normalize(r.short);
         if (rn === norm) continue;
@@ -305,12 +240,7 @@ async function checkVersion(version: Version): Promise<void> {
           break;
         }
       }
-      // Fuzzy/typo match second: same year + same citation shape + nearly
-      // identical surname (edit distance ≤ 2). Citation shape comparison
-      // prevents nonsense pairings like "Scott et al. 2022" → "Scott 2022".
-      // Edit distance 2 catches typos like Ferriera↔Ferreira; in exchange
-      // we tolerate a small chance of coincidental matches (e.g. Zhao↔Zhang)
-      // which the reviewer can dismiss.
+      // Typos: same year and citation shape, surname within one edit
       if (!nearMatch) {
         const surname = leadingSurname(norm);
         const yearMatch = norm.match(/(\d{4}[a-z]?)$/);
@@ -365,7 +295,6 @@ async function checkVersion(version: Version): Promise<void> {
       b.occurrences - a.occurrences,
   );
 
-  // Summary stats.
   const distinctKnown = knownHits.size;
   const totalKnownOccurrences = [...knownHits.values()].reduce(
     (s, n) => s + n,
@@ -379,7 +308,6 @@ async function checkVersion(version: Version): Promise<void> {
   console.log(`Matches: ${totalMatches} (${totalKnownOccurrences} resolved, ${unknownOccurrences} unresolved)`);
   console.log(`Bibliography: ${refs.length} (${distinctKnown} cited)`);
 
-  // Unresolved citations, grouped by category.
   const groups: Record<UnknownCategory, CategorizedUnknown[]> = {
     missing: [],
     ambiguous_year: [],
@@ -406,8 +334,6 @@ function orderForCategory(c: UnknownCategory): number {
   }[c];
 }
 
-/** Plain list — used for groups where the bibliography column is meaningless
- * (Missing has nothing to suggest, False positive isn't actually a citation). */
 function printList(title: string, items: CategorizedUnknown[]) {
   console.log(`\n--- ${title} (${items.length}) ---`);
   if (items.length === 0) return;
@@ -458,18 +384,12 @@ function printGroup(title: string, items: CategorizedUnknown[]) {
   }
 }
 
-/**
- * Optimal String Alignment (Damerau-Levenshtein restricted to adjacent
- * transpositions, no further edits to the transposed pair). Matters here
- * because letter swaps like "Ferriera"↔"Ferreira" count as one edit instead
- * of two — letting us tighten the typo-match threshold.
- */
+// Optimal string alignment, so a swap like Ferriera/Ferreira is one edit
 function editDistance(a: string, b: string): number {
   if (a === b) return 0;
   if (Math.abs(a.length - b.length) > 4) return 99;
   const m = a.length;
   const n = b.length;
-  // d[i][j] = OSA distance between a[0..i] and b[0..j].
   const d: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1));
   for (let i = 0; i <= m; i++) d[i][0] = i;
   for (let j = 0; j <= n; j++) d[0][j] = j;
